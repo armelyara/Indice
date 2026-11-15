@@ -2,14 +2,14 @@
   <img src="https://raw.githubusercontent.com/armelyara/Indice/main/indice/static/indice_logo.png" alt="Indice" width="180">
 </p>
 
-<h1 align="center">Indice — Les murs ont des oreilles</h1>
+<h1 align="center">Indice — Du cas au dossier</h1>
 
 <p align="center">
   <a href="https://pypi.org/project/indice/"><img src="https://img.shields.io/pypi/v/indice.svg" alt="PyPI"></a>
 </p>
 
 
-Indice analyse des **sources texte et audio** (les fichiers de l'utilisateur, ou des sources web qu'il verse lui-même) pour mener une investigation : il extrait les entités d'intérêt, les corrèle, bâtit un graphe et une chronologie, flague les signaux et monte un **dossier d'enquête**
+« Les murs ont des oreilles. » Indice analyse des **sources texte et audio** (les fichiers de l'utilisateur, ou des sources web qu'il verse lui-même) pour mener une investigation : il extrait les entités d'intérêt, les corrèle, bâtit un graphe et une chronologie, flague les signaux et monte un **dossier d'enquête**
 
 Trois domaines (packs de connaissances) : **cybersécurité (CTI)**, **justice / Journalisme**, **santé / biomédical / pharmacovigilance**.
 
