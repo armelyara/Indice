@@ -375,7 +375,7 @@
     const LEGAL = {
       about: {
         title: "À propos",
-        html: `<p><strong style="color:var(--fit-green)">Indice — du cas au dossier.</strong></p>
+        html: `<p><strong style="color:var(--fit-green)">Indice</strong></p>
 <p>« Les murs ont des oreilles. » Indice est un outil d'aide à l'investigation qui rassemble des sources (texte, audio, images), en extrait les éléments d'intérêt, les corrèle et les aligne dans le temps pour monter un dossier traçable.</p>
 <div ${_SH}>Principe</div>
 <p>Hors-ligne et déterministe par défaut : l'outil organise et trace les éléments extraits, il n'émet aucun jugement. Les conclusions appartiennent à l'analyste.</p>
@@ -423,7 +423,6 @@
       return `<div style="height:100%;display:flex;align-items:center;justify-content:center;padding:20px">
     <div class="win" style="width:340px;max-width:90vw"><div class="hd"><span>INDICE — ACCÈS</span><span class="wc"></span></div><div class="rule"></div>
       <div style="padding:22px 20px;display:flex;flex-direction:column;gap:12px">
-        <div style="font-size:11px;color:var(--fit-text-faint);letter-spacing:.1em">Du cas au dossier.</div>
         <input id="login-op" value="${esc(S.opId || "ANALYSTE")}" placeholder="Opérateur" style="background:var(--fit-surface-3);border:1px solid var(--fit-border-strong);color:var(--fit-green);font-size:12px;padding:9px 11px;outline:none"/>
         <input id="login-pass" type="password" placeholder="Phrase secrète" onkeydown="if(event.key==='Enter')indice.doLogin()" style="background:var(--fit-surface-3);border:1px solid var(--fit-border-strong);color:var(--fit-green);font-size:12px;padding:9px 11px;outline:none"/>
         ${S.loginErr ? `<div style="color:#e5534b;font-size:11px">${esc(S.loginErr)}</div>` : ""}

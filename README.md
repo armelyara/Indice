@@ -2,7 +2,7 @@
   <img src="https://raw.githubusercontent.com/armelyara/Indice/main/indice/static/indice_logo.png" alt="Indice" width="180">
 </p>
 
-<h1 align="center">Indice — Du cas au dossier</h1>
+<h1 align="center">Indice</h1>
 
 <p align="center">
   <a href="https://pypi.org/project/indice/"><img src="https://img.shields.io/pypi/v/indice.svg" alt="PyPI"></a>
