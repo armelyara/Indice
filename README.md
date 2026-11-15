@@ -1,15 +1,15 @@
 <p align="center">
-  <img src="https://raw.githubusercontent.com/armelyara/Fitini/main/fitini/static/fitini_logo.png" alt="Fitini" width="180">
+  <img src="https://raw.githubusercontent.com/armelyara/Indice/main/indice/static/indice_logo.png" alt="Indice" width="180">
 </p>
 
-<h1 align="center">Fitini — Les murs ont des oreilles</h1>
+<h1 align="center">Indice — Les murs ont des oreilles</h1>
 
 <p align="center">
-  <a href="https://pypi.org/project/fitini/"><img src="https://img.shields.io/pypi/v/fitini.svg" alt="PyPI"></a>
+  <a href="https://pypi.org/project/indice/"><img src="https://img.shields.io/pypi/v/indice.svg" alt="PyPI"></a>
 </p>
 
 
-Fitini analyse des **sources texte et audio** (les fichiers de l'utilisateur, ou des sources web qu'il verse lui-même) pour mener une investigation : il extrait les entités d'intérêt, les corrèle, bâtit un graphe et une chronologie, flague les signaux et monte un **dossier d'enquête**
+Indice analyse des **sources texte et audio** (les fichiers de l'utilisateur, ou des sources web qu'il verse lui-même) pour mener une investigation : il extrait les entités d'intérêt, les corrèle, bâtit un graphe et une chronologie, flague les signaux et monte un **dossier d'enquête**
 
 Trois domaines (packs de connaissances) : **cybersécurité (CTI)**, **justice / Journalisme**, **santé / biomédical / pharmacovigilance**.
 
@@ -31,10 +31,10 @@ Toute **entité détectée** (personne, organisation, lieu, montant, GPS, IBAN, 
 ## Architecture
 | Fichier | Rôle |
 |---|---|
-| `fitini_core.py` | moteur : extraction (sélecteurs + lexique + NER) → corrélation → hypothèses/lock → alertes → timeline |
+| `indice_core.py` | moteur : extraction (sélecteurs + lexique + NER) → corrélation → hypothèses/lock → alertes → timeline |
 | `packs.py` | charge et fusionne les packs de domaine sélectionnés |
 | `server.py` | FastAPI : auth, WebSocket d'analyse, sessions, **dossiers**, **recherche web**, **export** |
-| `cli.py` | commande `fitini` : `serve` (interface) et `analyze` (ligne de commande) |
+| `cli.py` | commande `indice` : `serve` (interface) et `analyze` (ligne de commande) |
 | `audio_transcriber.py` | transcription micro / fichier (faster-whisper, VAD énergétique, hors boucle asyncio) |
 | `doc_ingest.py` | extraction de texte PDF (PyMuPDF) / DOCX / images (OCR RapidOCR) |
 | `dossiers.py` | store local des dossiers d'enquête (fichiers, hors-ligne) |
@@ -48,11 +48,11 @@ Toute **entité détectée** (personne, organisation, lieu, montant, GPS, IBAN, 
 
 ## Structure du projet
 ```
-Fitini/
-├── fitini/              # package installable (pip)
-│   ├── server.py        # FastAPI — point d'entrée : fitini.server:app
-│   ├── cli.py           # commande `fitini` (serve / analyze)
-│   ├── fitini_core.py   # moteur ; + packs, dossiers, web_collect, dossier_analyze/export, db, auth…
+Indice/
+├── indice/              # package installable (pip)
+│   ├── server.py        # FastAPI — point d'entrée : indice.server:app
+│   ├── cli.py           # commande `indice` (serve / analyze)
+│   ├── indice_core.py   # moteur ; + packs, dossiers, web_collect, dossier_analyze/export, db, auth…
 │   ├── static/          # interface web + logo (servis par le serveur)
 │   ├── profiles/        # packs de domaine (cybersécurité / investigation / santé)
 │   └── config.json      # auth, pipeline, réglages par défaut
@@ -61,24 +61,24 @@ Fitini/
 ├── LICENSE · NOTICE
 └── README.md
 ```
-Données d'exécution créées dans le dossier courant, non versionnées : `uploads/`, `dossiers/`, `fitini.db`.
+Données d'exécution créées dans le dossier courant, non versionnées : `uploads/`, `dossiers/`, `indice.db`.
 
 ## Lancer
 ```bash
 # Installation
-pip install fitini
+pip install indice
 # extras optionnels : audio (micro), OCR, NER
-pip install "fitini[audio,ocr,ner]"
+pip install "indice[audio,ocr,ner]"
 
 # Interface web
-fitini serve --open                 # ouvre http://127.0.0.1:8000
+indice serve --open                 # ouvre http://127.0.0.1:8000
 
 # Ligne de commande, sans interface
-fitini analyze mon_dossier/ --subject "nom, mot-clé" --format md --out dossier.md
+indice analyze mon_dossier/ --subject "nom, mot-clé" --format md --out dossier.md
 ```
 Recherche web (optionnelle, une clé suffit) :
 ```bash
-FITINI_WEB=1 EXA_API_KEY=... fitini serve
+INDICE_WEB=1 EXA_API_KEY=... indice serve
 # ou TAVILY_API_KEY=...
 ```
 Les **modèles** (Whisper, OCR RapidOCR, spaCy) ne sont **pas inclus** dans le dépôt : ils sont téléchargés / servis côté serveur. Le code reste utilisable tel quel.

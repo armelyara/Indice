@@ -1,5 +1,5 @@
 """
-db.py — SQLite persistence for Fitini Voice Analyzer.
+db.py — SQLite persistence for Indice Voice Analyzer.
 
 Stores analysis sessions (archive + per-session report), target dossiers, and the live
 settings. Only settings are seeded; sessions and targets start empty and fill as real
@@ -15,7 +15,7 @@ import threading
 import time
 from typing import Any, Dict, List, Optional
 
-DB_PATH = os.environ.get("FITINI_DB", os.path.join(os.environ.get("FITINI_DATA", os.getcwd()), "fitini.db"))
+DB_PATH = os.environ.get("INDICE_DB", os.path.join(os.environ.get("INDICE_DATA", os.getcwd()), "indice.db"))
 _LOCK = threading.Lock()
 
 

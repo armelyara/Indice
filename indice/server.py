@@ -1,7 +1,7 @@
 """
-server.py — FastAPI backend for Fitini (Path B: canonical fitini_core output).
+server.py — FastAPI backend for Indice (Path B: canonical indice_core output).
 
-The investigation engine is the unified `fitini_core.CorrelationEngine`, run over the
+The investigation engine is the unified `indice_core.CorrelationEngine`, run over the
 knowledge packs the operator selects in the UI (resolved by `packs.load_domains`). The
 WebSocket streams the engine's canonical `AnalysisResult` per utterance; the front
 consumes it directly (no legacy frame, no adapter).
@@ -54,15 +54,15 @@ from . import dossier_export
 from . import doc_ingest
 from .audio_transcriber import AudioStreamTranscriber
 from .auth import AuthManager
-from .fitini_core import CorrelationEngine
+from .indice_core import CorrelationEngine
 
 PKG_DIR = os.path.dirname(__file__)                 # packaged assets live here
-CONFIG_PATH = os.environ.get("FITINI_CONFIG", os.path.join(PKG_DIR, "config.json"))
+CONFIG_PATH = os.environ.get("INDICE_CONFIG", os.path.join(PKG_DIR, "config.json"))
 STATIC_DIR = os.path.join(PKG_DIR, "static")
-DATA_DIR = os.environ.get("FITINI_DATA", os.getcwd())  # runtime data: user's folder
+DATA_DIR = os.environ.get("INDICE_DATA", os.getcwd())  # runtime data: user's folder
 UPLOAD_DIR = os.path.join(DATA_DIR, "uploads")
 os.makedirs(UPLOAD_DIR, exist_ok=True)
-MAX_UPLOAD_BYTES = int(os.environ.get("FITINI_MAX_UPLOAD_MB", "50")) * 1024 * 1024
+MAX_UPLOAD_BYTES = int(os.environ.get("INDICE_MAX_UPLOAD_MB", "50")) * 1024 * 1024
 
 
 async def _read_capped(upload) -> bytes:
@@ -78,11 +78,11 @@ with open(CONFIG_PATH, "r", encoding="utf-8") as fh:
 db.init_db(CONFIG)
 auth_manager = AuthManager(CONFIG)
 if auth_manager.using_default_credentials:
-    logging.getLogger("fitini").warning(
-        "Fitini runs with DEFAULT credentials. Set FITINI_PASSPHRASE before "
+    logging.getLogger("indice").warning(
+        "Indice runs with DEFAULT credentials. Set INDICE_PASSPHRASE before "
         "exposing it beyond localhost.")
 
-app = FastAPI(title="Fitini")
+app = FastAPI(title="Indice")
 if os.path.isdir(STATIC_DIR):
     app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")
 
@@ -220,7 +220,7 @@ async def web_search(subject: Optional[str] = Query(None),
     except web_collect.WebCollectError as exc:
         return {"candidates": [], "error": str(exc)}
     except Exception:
-        logging.getLogger("fitini").exception("web search failed")
+        logging.getLogger("indice").exception("web search failed")
         return {"candidates": [], "error": "Recherche indisponible."}
 
 
@@ -372,7 +372,7 @@ def _engine_for(domains_param: Optional[str], subject_param: Optional[str] = Non
         profile = packs.load_domains(ids)
     except Exception:
         profile = packs.load_domains(["justice"])
-    use_ner = os.getenv("FITINI_NER", "1") != "0"
+    use_ner = os.getenv("INDICE_NER", "1") != "0"
     return CorrelationEngine(profile, watchlist=_watchlist(subject_param), use_ner=use_ner)
 
 
@@ -570,7 +570,7 @@ async def analyze(file: UploadFile = File(...),
         except Exception:
             # Unexpected failure (corrupt file / parser bug): keep internals
             # server-side, return a generic message (no path/stack leak).
-            logging.getLogger("fitini").exception("analyze: extraction failed")
+            logging.getLogger("indice").exception("analyze: extraction failed")
             error = "Erreur d'extraction du document."
     finally:
         try:

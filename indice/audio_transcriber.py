@@ -1,5 +1,5 @@
 """
-audio_transcriber.py — audio acquisition + transcription for Fitini Voice Analyzer.
+audio_transcriber.py — audio acquisition + transcription for Indice Voice Analyzer.
 
 Three sources, one async interface (`stream_transcriptions`):
 

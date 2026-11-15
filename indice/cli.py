@@ -1,8 +1,8 @@
 """
-cli.py -- command-line entry point for Fitini.
+cli.py -- command-line entry point for Indice.
 
-    fitini serve   [--host H] [--port P] [--reload] [--open]
-    fitini analyze <path> [--subject "a, b"] [--format md|pdf] [--out FILE]
+    indice serve   [--host H] [--port P] [--reload] [--open]
+    indice analyze <path> [--subject "a, b"] [--format md|pdf] [--out FILE]
 
 `serve` launches the local web app; `analyze` runs the deterministic engine over a
 file or folder and prints (or writes) a report -- no browser, no LLM.
@@ -17,8 +17,8 @@ import sys
 def _cmd_serve(args):
     import uvicorn
     if args.host not in ("127.0.0.1", "localhost", ""):
-        print("WARNING: host %s exposes Fitini beyond this machine. Set "
-              "FITINI_PASSPHRASE and put it behind a reverse proxy / TLS." % args.host,
+        print("WARNING: host %s exposes Indice beyond this machine. Set "
+              "INDICE_PASSPHRASE and put it behind a reverse proxy / TLS." % args.host,
               file=sys.stderr)
     if args.open:
         import threading
@@ -26,7 +26,7 @@ def _cmd_serve(args):
         host = "127.0.0.1" if args.host in ("0.0.0.0", "") else args.host
         url = "http://%s:%d" % (host, args.port)
         threading.Timer(1.5, lambda: webbrowser.open(url)).start()
-    uvicorn.run("fitini.server:app", host=args.host, port=args.port, reload=args.reload)
+    uvicorn.run("indice.server:app", host=args.host, port=args.port, reload=args.reload)
 
 
 def _collect_files(path):
@@ -85,7 +85,7 @@ def _cmd_analyze(args):
 
 
 def main(argv=None):
-    p = argparse.ArgumentParser(prog="fitini", description="Fitini - du cas au dossier.")
+    p = argparse.ArgumentParser(prog="indice", description="Indice - du cas au dossier.")
     sub = p.add_subparsers(dest="cmd")
 
     ps = sub.add_parser("serve", help="Lancer l'interface web locale.")

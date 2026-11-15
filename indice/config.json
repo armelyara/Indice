@@ -1,9 +1,9 @@
 {
   "auth": {
     "operator_id": "ANALYSTE",
-    "passphrase": "fitini",
+    "passphrase": "indice",
     "token_ttl_seconds": 3600,
-    "_comment": "Demo credential only. Override passphrase with env FITINI_PASSPHRASE. Never ship a real deployment with a plaintext passphrase in config."
+    "_comment": "Demo credential only. Override passphrase with env INDICE_PASSPHRASE. Never ship a real deployment with a plaintext passphrase in config."
   },
   "pipeline": {
     "sample_rate": 16000,

@@ -6,7 +6,7 @@ Given a dossier's saved sources, it:
     "before/now" juxtaposition the analyst reads to judge coherence, and
   * runs the open-extraction engine over all source texts for entities.
 
-Fitini surfaces and aligns; the human judges.
+Indice surfaces and aligns; the human judges.
 """
 from __future__ import annotations
 
@@ -66,7 +66,7 @@ def analyze(dossier: Dict[str, Any], extra_selectors: str = "") -> Dict[str, Any
     # 2) entities via the open-extraction engine (deterministic, no spaCy)
     entities: List[Dict[str, Any]] = []
     try:
-        from .fitini_core import CorrelationEngine
+        from .indice_core import CorrelationEngine
         from . import packs
         try:
             profile = packs.load_domains(["justice"])

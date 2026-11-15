@@ -1,7 +1,7 @@
 """
 web_collect.py -- OPTIONAL web source collection (Phase 3, human-in-the-loop).
 
-OFF by default. Enabled only when FITINI_WEB=1 AND a provider API key is set.
+OFF by default. Enabled only when INDICE_WEB=1 AND a provider API key is set.
 The offline core never calls a provider unless a search is actually requested.
 
 Providers (auto-selected by whichever key is present):
@@ -33,13 +33,13 @@ class WebCollectError(RuntimeError):
 
 
 def _enabled() -> bool:
-    return os.environ.get("FITINI_WEB", "0") == "1"
+    return os.environ.get("INDICE_WEB", "0") == "1"
 
 
 def _provider():
     """Return (name, api_key) or raise an operator-facing error."""
     if not _enabled():
-        raise WebCollectError("Collecte web desactivee : lancer le serveur avec FITINI_WEB=1.")
+        raise WebCollectError("Collecte web desactivee : lancer le serveur avec INDICE_WEB=1.")
     if os.environ.get("EXA_API_KEY"):
         return "exa", os.environ["EXA_API_KEY"]
     if os.environ.get("TAVILY_API_KEY"):
@@ -142,7 +142,7 @@ def fetch_text(url: str) -> str:
         raise WebCollectError("URL non supportee (http/https uniquement).")
     if not _is_public_host(p.hostname or ""):
         raise WebCollectError("Hote interne/prive bloque.")
-    req = urllib.request.Request(url, headers={"User-Agent": "Fitini/0.3"})
+    req = urllib.request.Request(url, headers={"User-Agent": "Indice/0.3"})
     with urllib.request.urlopen(req, timeout=_TIMEOUT) as r:
         raw = r.read().decode("utf-8", "ignore")
     return _strip_html(raw)

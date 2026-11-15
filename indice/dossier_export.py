@@ -7,7 +7,7 @@ Builds a shareable report from a dossier + its analysis:
                  Latin-1 so no font file needs bundling.
 
 Content: synthesis, dated before/now juxtaposition, extracted entities, and the
-traced source list. Fitini surfaces and aligns; the human judges.
+traced source list. Indice surfaces and aligns; the human judges.
 """
 from __future__ import annotations
 

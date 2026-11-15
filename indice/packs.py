@@ -1,7 +1,7 @@
 """
 packs.py — app-layer loader: maps a UI domain id to one or more knowledge packs.
 
-File I/O lives here, NOT in fitini-core (the core stays pure/offline). The UI's
+File I/O lives here, NOT in indice-core (the core stays pure/offline). The UI's
 mandatory multi-select domain choice is resolved through load_domains(): selected
 domain ids -> their packs are loaded and merged into one pipeline via
 combine_profiles.
@@ -9,7 +9,7 @@ combine_profiles.
 import json
 import os
 
-from .fitini_core import combine_profiles
+from .indice_core import combine_profiles
 
 HERE = os.path.dirname(os.path.abspath(__file__))  # packaged profiles live here
 

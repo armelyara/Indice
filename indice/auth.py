@@ -1,7 +1,7 @@
 """
-auth.py — token authentication for the Fitini access gate.
+auth.py — token authentication for the Indice access gate.
 
-One operator credential. The passphrase comes from the FITINI_PASSPHRASE env var when
+One operator credential. The passphrase comes from the INDICE_PASSPHRASE env var when
 set, otherwise from config.json. It is verified with a salted PBKDF2-HMAC-SHA256 hash
 (per-process random salt) and a constant-time compare, issuing an opaque in-memory
 bearer token with a TTL. Running on the shipped default is reported so the server can
@@ -17,7 +17,7 @@ import secrets
 import time
 from typing import Any, Dict, Optional
 
-_DEFAULT_PASSPHRASE = "fitini"
+_DEFAULT_PASSPHRASE = "indice"
 _PBKDF2_ROUNDS = 200_000
 
 
@@ -28,11 +28,11 @@ def _derive(passphrase: str, salt: bytes) -> bytes:
 class AuthManager:
     def __init__(self, config: Dict[str, Any]):
         auth = config.get("auth", {})
-        self.operator_id = os.environ.get("FITINI_OPERATOR", auth.get("operator_id", "OPERATOR"))
-        env_pass = os.environ.get("FITINI_PASSPHRASE")
+        self.operator_id = os.environ.get("INDICE_OPERATOR", auth.get("operator_id", "OPERATOR"))
+        env_pass = os.environ.get("INDICE_PASSPHRASE")
         config_pass = auth.get("passphrase", _DEFAULT_PASSPHRASE)
         passphrase = env_pass if env_pass is not None else config_pass
-        # True when no FITINI_PASSPHRASE is set and config still ships the default.
+        # True when no INDICE_PASSPHRASE is set and config still ships the default.
         self.using_default_credentials = env_pass is None and config_pass == _DEFAULT_PASSPHRASE
         self._salt = secrets.token_bytes(16)
         self._hash = _derive(passphrase, self._salt)

@@ -1,7 +1,7 @@
 """
-fitini_core.py — the domain-agnostic correlation engine behind Fitini.
+indice_core.py — the domain-agnostic correlation engine behind Indice.
 
-Fitini is ONE real-time correlation engine. You point it at a domain by loading a
+Indice is ONE real-time correlation engine. You point it at a domain by loading a
 *domain profile* (profiles/*.json) that declares:
   * lexicon / patterns  — what entities to extract (keywords + regex), deterministic
   * links               — correlation rules that imply related entities (build a graph)

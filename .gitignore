@@ -6,7 +6,7 @@ venv/
 env/
 
 # App data
-fitini.db
+indice.db
 *.sqlite3
 
 # OS / editor
@@ -19,7 +19,7 @@ dossiers/
 
 # Personal / generated artifacts (never commit)
 *.pdf
-fitini-rapport.txt
+indice-rapport.txt
 
 # Packaging
 *.egg-info/

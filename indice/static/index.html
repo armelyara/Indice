@@ -4,8 +4,8 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Fitini — Poste d'analyse</title>
-  <link rel="icon" type="image/png" href="/static/fitini_logo.png">
+  <title>Indice — Poste d'analyse</title>
+  <link rel="icon" type="image/png" href="/static/indice_logo.png">
   <style>
     :root {
       --mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
@@ -322,14 +322,14 @@
     const NAV = [["intercept", "01 INTERCEPT"], ["analyze", "02 ANALYSE"], ["report", "03 REPORT"], ["dossier", "04 DOSSIER"], ["archive", "05 ARCHIVE"], ["config", "06 CONFIG"]];
 
     const S = {
-      screen: "intercept", token: localStorage.getItem("fitini_tok") || null, opId: "ANALYSTE", needLogin: false, loginErr: "", docView: null, clock: "--:--:-- UTC",
+      screen: "intercept", token: localStorage.getItem("indice_tok") || null, opId: "ANALYSTE", needLogin: false, loginErr: "", docView: null, clock: "--:--:-- UTC",
       domain: "justice", domainsOpen: false, subject: "", interceptSource: "", micMode: false,
       started: false, done: false, streaming: false,
       lines: [], frames: [], detectedOrder: [], rows: emptyRows(), cellOf: {}, hotCanon: null,
       summary: { locked: null, leading: null, entities: [] }, relationships: [], hypotheses: [], timeline: [], flags: [], locations: [],
       flagQueue: [], busyFlags: false,
       results: [], filterEnt: null, termOpen: false, alert: null, alertedKeys: new Set(),
-      termLines: [{ t: "Fitini terminal — tapez `help`.", c: "var(--fit-sage)" }],
+      termLines: [{ t: "Indice terminal — tapez `help`.", c: "var(--fit-sage)" }],
       crossOpen: false, query: "", archive: [], settings: { vad: true, diarize: true, redact: false, autolock: true },
       dossiers: [], dossierId: null, dossierData: null, dossierNew: "",
       winMin: new Set(), winMax: null, winClosed: new Set(), micError: null,
@@ -343,10 +343,10 @@
     async function relogin() {
       const r = await fetch("/api/login", {
         method: "POST", headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ operator_id: "ANALYSTE", passphrase: "fitini" })
+        body: JSON.stringify({ operator_id: "ANALYSTE", passphrase: "indice" })
       });
       if (!r.ok) throw new Error("login " + r.status);
-      const j = await r.json(); S.token = j.token; localStorage.setItem("fitini_tok", S.token); return S.token;
+      const j = await r.json(); S.token = j.token; localStorage.setItem("indice_tok", S.token); return S.token;
     }
     async function api(path, opts = {}, _retried) {
       const h = Object.assign({ "Content-Type": "application/json" }, opts.headers || {});
@@ -368,15 +368,15 @@
       if (S.winClosed.has(key)) return "";
       const k = encodeURIComponent(key);
       const cls = "win" + (S.winMin.has(key) ? " collapsed" : "") + (S.winMax === key ? " maximized" : "");
-      return `<div class="${cls}" ${extra || ""}><div class="hd"><span>${esc(title)}</span><span class="wc"><b onclick="fitini.winMin('${k}')" title="Réduire">–</b><b onclick="fitini.winMax('${k}')" title="Agrandir">□</b><b onclick="fitini.winClose('${k}')" title="Fermer">×</b></span></div><div class="rule"></div>${body}</div>`;
+      return `<div class="${cls}" ${extra || ""}><div class="hd"><span>${esc(title)}</span><span class="wc"><b onclick="indice.winMin('${k}')" title="Réduire">–</b><b onclick="indice.winMax('${k}')" title="Agrandir">□</b><b onclick="indice.winClose('${k}')" title="Fermer">×</b></span></div><div class="rule"></div>${body}</div>`;
     }
     const _SH = 'style="color:var(--fit-green);font-weight:700;margin:16px 0 6px;letter-spacing:.05em;font-size:12px"';
     const _FT = 'style="color:var(--fit-text-faint);margin-top:18px;font-size:11px"';
     const LEGAL = {
       about: {
         title: "À propos",
-        html: `<p><strong style="color:var(--fit-green)">Fitini — les murs ont des oreilles.</strong></p>
-<p>Fitini est un outil d'aide à l'investigation : il rassemble des sources (texte, audio, images), en extrait les éléments d'intérêt, les corrèle, les aligne dans le temps et monte un dossier traçable — <em>du cas au dossier</em>.</p>
+        html: `<p><strong style="color:var(--fit-green)">Indice — les murs ont des oreilles.</strong></p>
+<p>Indice est un outil d'aide à l'investigation : il rassemble des sources (texte, audio, images), en extrait les éléments d'intérêt, les corrèle, les aligne dans le temps et monte un dossier traçable — <em>du cas au dossier</em>.</p>
 <div ${_SH}>Principe</div>
 <p>Hors-ligne et déterministe par défaut : l'outil organise et trace les éléments extraits, il n'émet aucun jugement. Les conclusions appartiennent à l'analyste.</p>
 <div ${_SH}>Éditeur</div>
@@ -386,11 +386,11 @@
       privacy: {
         title: "Politique de confidentialité",
         html: `<div ${_SH}>Vos données restent chez vous</div>
-<p>Fitini est auto-hébergé. Les fichiers que vous déposez, les dossiers, les transcriptions et les rapports sont stockés <strong>localement</strong>, sur votre machine ou votre serveur. Ils ne sont envoyés à aucun service externe.</p>
+<p>Indice est auto-hébergé. Les fichiers que vous déposez, les dossiers, les transcriptions et les rapports sont stockés <strong>localement</strong>, sur votre machine ou votre serveur. Ils ne sont envoyés à aucun service externe.</p>
 <div ${_SH}>Traitement local</div>
 <p>La transcription (Whisper), l'OCR et l'extraction d'entités s'exécutent sur votre machine. Aucune télémétrie, aucun traceur, aucun compte distant.</p>
 <div ${_SH}>Recherche web (optionnelle)</div>
-<p>La collecte web est désactivée par défaut. Si vous l'activez, la requête que vous saisissez est transmise au fournisseur de recherche que vous configurez (Exa ou Tavily), et Fitini télécharge les pages publiques que vous sélectionnez. Ces fournisseurs traitent alors votre requête selon leurs propres politiques.</p>
+<p>La collecte web est désactivée par défaut. Si vous l'activez, la requête que vous saisissez est transmise au fournisseur de recherche que vous configurez (Exa ou Tavily), et Indice télécharge les pages publiques que vous sélectionnez. Ces fournisseurs traitent alors votre requête selon leurs propres politiques.</p>
 <div ${_SH}>Authentification</div>
 <p>La phrase secrète n'est jamais stockée en clair (hachage salé PBKDF2) ; les jetons de session vivent en mémoire et expirent.</p>
 <div ${_SH}>Responsabilité</div>
@@ -400,13 +400,13 @@
       terms: {
         title: "Conditions d'utilisation",
         html: `<div ${_SH}>Licence</div>
-<p>Fitini est un logiciel libre sous licence Apache-2.0 : vous êtes libre de l'utiliser, le modifier et le redistribuer (voir le fichier LICENSE).</p>
+<p>Indice est un logiciel libre sous licence Apache-2.0 : vous êtes libre de l'utiliser, le modifier et le redistribuer (voir le fichier LICENSE).</p>
 <div ${_SH}>Fourni « en l'état »</div>
 <p>Le logiciel est fourni sans garantie d'aucune sorte, dans les limites permises par la loi, conformément à la licence Apache-2.0.</p>
 <div ${_SH}>Usage licite</div>
-<p>Vous êtes seul responsable de l'usage que vous faites de Fitini. Il est destiné à des investigations et à un travail journalistique légitimes. Ne l'utilisez pas pour surveiller illégalement, harceler ou porter atteinte aux droits d'autrui.</p>
+<p>Vous êtes seul responsable de l'usage que vous faites de Indice. Il est destiné à des investigations et à un travail journalistique légitimes. Ne l'utilisez pas pour surveiller illégalement, harceler ou porter atteinte aux droits d'autrui.</p>
 <div ${_SH}>Ce n'est pas un verdict</div>
-<p>Fitini rassemble, extrait et aligne des éléments tracés à leur source ; il n'établit pas la vérité et ne rend aucun jugement. Les conclusions vous appartiennent et doivent être vérifiées. Fitini ne fournit pas de conseil juridique.</p>
+<p>Indice rassemble, extrait et aligne des éléments tracés à leur source ; il n'établit pas la vérité et ne rend aucun jugement. Les conclusions vous appartiennent et doivent être vérifiées. Indice ne fournit pas de conseil juridique.</p>
 <div ${_SH}>Données</div>
 <p>Le traitement des données est décrit dans la Politique de confidentialité.</p>
 <p ${_FT}>Dernière mise à jour : 12 novembre 2026.</p>`
@@ -415,20 +415,20 @@
     function docScreen(key) {
       const d = LEGAL[key] || LEGAL.about;
       return `<div style="height:100%;overflow:auto;padding:28px 20px"><div style="max-width:760px;margin:0 auto">
-    <div style="display:flex;align-items:center;gap:14px;margin-bottom:18px"><button class="actbtn" onclick="fitini.closeDoc()">← RETOUR</button><div style="font-size:20px;letter-spacing:.08em">${esc(d.title)}</div></div>
+    <div style="display:flex;align-items:center;gap:14px;margin-bottom:18px"><button class="actbtn" onclick="indice.closeDoc()">← RETOUR</button><div style="font-size:20px;letter-spacing:.08em">${esc(d.title)}</div></div>
     <div class="win"><div style="padding:22px 24px;font-size:13px;line-height:1.7;color:var(--fit-text-dim)">${d.html}</div></div>
   </div></div>`;
     }
     function loginScreen() {
       return `<div style="height:100%;display:flex;align-items:center;justify-content:center;padding:20px">
-    <div class="win" style="width:340px;max-width:90vw"><div class="hd"><span>FITINI — ACCÈS</span><span class="wc"></span></div><div class="rule"></div>
+    <div class="win" style="width:340px;max-width:90vw"><div class="hd"><span>INDICE — ACCÈS</span><span class="wc"></span></div><div class="rule"></div>
       <div style="padding:22px 20px;display:flex;flex-direction:column;gap:12px">
         <div style="font-size:11px;color:var(--fit-text-faint);letter-spacing:.1em">Les murs ont des oreilles.</div>
         <input id="login-op" value="${esc(S.opId || "ANALYSTE")}" placeholder="Opérateur" style="background:var(--fit-surface-3);border:1px solid var(--fit-border-strong);color:var(--fit-green);font-size:12px;padding:9px 11px;outline:none"/>
-        <input id="login-pass" type="password" placeholder="Phrase secrète" onkeydown="if(event.key==='Enter')fitini.doLogin()" style="background:var(--fit-surface-3);border:1px solid var(--fit-border-strong);color:var(--fit-green);font-size:12px;padding:9px 11px;outline:none"/>
+        <input id="login-pass" type="password" placeholder="Phrase secrète" onkeydown="if(event.key==='Enter')indice.doLogin()" style="background:var(--fit-surface-3);border:1px solid var(--fit-border-strong);color:var(--fit-green);font-size:12px;padding:9px 11px;outline:none"/>
         ${S.loginErr ? `<div style="color:#e5534b;font-size:11px">${esc(S.loginErr)}</div>` : ""}
-        <button class="primary" onclick="fitini.doLogin()">ENTRER</button>
-        <div style="display:flex;gap:12px;justify-content:center;font-size:10px;color:var(--fit-text-faint);margin-top:4px"><span onclick="fitini.openDoc('about')" style="cursor:pointer">À propos</span><span onclick="fitini.openDoc('privacy')" style="cursor:pointer">Confidentialité</span><span onclick="fitini.openDoc('terms')" style="cursor:pointer">Conditions</span></div>
+        <button class="primary" onclick="indice.doLogin()">ENTRER</button>
+        <div style="display:flex;gap:12px;justify-content:center;font-size:10px;color:var(--fit-text-faint);margin-top:4px"><span onclick="indice.openDoc('about')" style="cursor:pointer">À propos</span><span onclick="indice.openDoc('privacy')" style="cursor:pointer">Confidentialité</span><span onclick="indice.openDoc('terms')" style="cursor:pointer">Conditions</span></div>
       </div></div></div>`;
     }
     function render() {
@@ -440,30 +440,30 @@
     }
     function shell(main) {
       const dl = (DOMAINS.find(d => d.id === S.domain) || DOMAINS[0]).name.split(" ")[0].toUpperCase();
-      const nav = NAV.map(([k, l]) => `<button class="navbtn ${S.screen === k ? "on" : ""}" onclick="fitini.go('${k}')">${esc(l)}${(k === "intercept" && S.started && !S.done) ? '<span style="margin-left:auto;color:var(--fit-green)">●</span>' : ""}</button>`).join("");
+      const nav = NAV.map(([k, l]) => `<button class="navbtn ${S.screen === k ? "on" : ""}" onclick="indice.go('${k}')">${esc(l)}${(k === "intercept" && S.started && !S.done) ? '<span style="margin-left:auto;color:var(--fit-green)">●</span>' : ""}</button>`).join("");
       return `<div style="display:grid;grid-template-rows:auto 1fr;height:100%">
     <div style="display:flex;justify-content:space-between;align-items:center;gap:14px;padding:9px 20px;border-bottom:1px solid var(--fit-border);background:var(--fit-surface-3);flex-wrap:wrap">
       <div style="display:flex;align-items:center;gap:14px">
-        <img src="/static/fitini_logo.png" alt="Fitini" style="height:30px;width:auto;display:block"/>
-        <span style="font-size:16px;letter-spacing:.34em;color:var(--fit-green);text-shadow:0 0 10px var(--fit-green-glow);font-weight:700">FITINI</span>
+        <img src="/static/indice_logo.png" alt="Indice" style="height:30px;width:auto;display:block"/>
+        <span style="font-size:16px;letter-spacing:.34em;color:var(--fit-green);text-shadow:0 0 10px var(--fit-green-glow);font-weight:700">INDICE</span>
         <span style="font-size:10px;letter-spacing:.2em;color:var(--fit-sage)">POSTE D'ANALYSE · RESTRICTED</span>
       </div>
       <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">
         <span id="clock" style="font-size:11px;color:var(--fit-text-muted);letter-spacing:.1em">${esc(S.clock)}</span>
-        <input id="subject-in" value="${esc(S.subject)}" oninput="fitini.setSubject(this.value)" onkeydown="fitini.subjectKey(event)" placeholder="⌖ Sujet / sélecteurs…" title="Qui / quoi tu suis (séparés par des virgules). Entrée pour (re)lancer." style="background:var(--fit-surface-3);border:1px solid var(--fit-border-strong);color:var(--fit-green);font-size:10px;letter-spacing:.06em;padding:6px 10px;outline:none;width:190px"/>
+        <input id="subject-in" value="${esc(S.subject)}" oninput="indice.setSubject(this.value)" onkeydown="indice.subjectKey(event)" placeholder="⌖ Sujet / sélecteurs…" title="Qui / quoi tu suis (séparés par des virgules). Entrée pour (re)lancer." style="background:var(--fit-surface-3);border:1px solid var(--fit-border-strong);color:var(--fit-green);font-size:10px;letter-spacing:.06em;padding:6px 10px;outline:none;width:190px"/>
         <div style="position:relative">
-          <button onclick="fitini.toggleDomains()" style="font-size:10px;letter-spacing:.12em;color:${S.domainsOpen ? "var(--fit-ink-on-green)" : "var(--fit-sage)"};background:${S.domainsOpen ? "var(--fit-green)" : "transparent"};border:1px solid var(--fit-green-dim);padding:6px 10px">⌗ MODE : ${esc(dl)} ▾</button>
+          <button onclick="indice.toggleDomains()" style="font-size:10px;letter-spacing:.12em;color:${S.domainsOpen ? "var(--fit-ink-on-green)" : "var(--fit-sage)"};background:${S.domainsOpen ? "var(--fit-green)" : "transparent"};border:1px solid var(--fit-green-dim);padding:6px 10px">⌗ MODE : ${esc(dl)} ▾</button>
           ${S.domainsOpen ? domainMenu() : ""}
         </div>
-        <button onclick="fitini.toggleTerm()" style="font-size:10px;letter-spacing:.12em;color:${S.termOpen ? "var(--fit-ink-on-green)" : "var(--fit-green)"};background:${S.termOpen ? "var(--fit-green)" : "transparent"};border:1px solid var(--fit-green-dim);padding:6px 10px">▌ TERMINAL</button>
-        <button onclick="fitini.lock()" style="font-size:10px;letter-spacing:.12em;color:var(--fit-text-muted);background:transparent;border:1px solid var(--fit-border);padding:6px 10px">⏻ VERROU</button>
+        <button onclick="indice.toggleTerm()" style="font-size:10px;letter-spacing:.12em;color:${S.termOpen ? "var(--fit-ink-on-green)" : "var(--fit-green)"};background:${S.termOpen ? "var(--fit-green)" : "transparent"};border:1px solid var(--fit-green-dim);padding:6px 10px">▌ TERMINAL</button>
+        <button onclick="indice.lock()" style="font-size:10px;letter-spacing:.12em;color:var(--fit-text-muted);background:transparent;border:1px solid var(--fit-border);padding:6px 10px">⏻ VERROU</button>
       </div>
     </div>
     <div style="display:grid;grid-template-columns:auto 1fr;min-height:0">
       <nav style="width:208px;border-right:1px solid var(--fit-border);background:var(--fit-surface-3);display:flex;flex-direction:column;padding:16px 0;min-height:0">
         <div style="font-size:10px;letter-spacing:.24em;color:var(--fit-text-faint);padding:0 18px 12px">NAVIGATION</div>
         ${nav}
-        <div style="margin-top:auto;padding:14px 18px;border-top:1px solid var(--fit-border);font-size:10px;letter-spacing:.1em;color:var(--fit-text-faint);line-height:1.7">OPÉRATEUR<br><span style="color:var(--fit-sage)">${esc(S.opId)}</span><br>HORS-LIGNE<div style="margin-top:12px;display:flex;flex-direction:column;gap:4px;letter-spacing:.06em"><span onclick="fitini.openDoc('about')" style="cursor:pointer">À propos</span><span onclick="fitini.openDoc('privacy')" style="cursor:pointer">Confidentialité</span><span onclick="fitini.openDoc('terms')" style="cursor:pointer">Conditions</span></div></div>
+        <div style="margin-top:auto;padding:14px 18px;border-top:1px solid var(--fit-border);font-size:10px;letter-spacing:.1em;color:var(--fit-text-faint);line-height:1.7">OPÉRATEUR<br><span style="color:var(--fit-sage)">${esc(S.opId)}</span><br>HORS-LIGNE<div style="margin-top:12px;display:flex;flex-direction:column;gap:4px;letter-spacing:.06em"><span onclick="indice.openDoc('about')" style="cursor:pointer">À propos</span><span onclick="indice.openDoc('privacy')" style="cursor:pointer">Confidentialité</span><span onclick="indice.openDoc('terms')" style="cursor:pointer">Conditions</span></div></div>
       </nav>
       <main style="min-height:0;min-width:0;overflow:auto;position:relative">${main}</main>
     </div>
@@ -475,14 +475,14 @@
     function domainMenu() {
       const rows = DOMAINS.map(d => {
         const on = S.domain === d.id;
-        return `<button class="dmrow" onclick="fitini.pickDomain('${d.id}')" style="display:block;width:100%;text-align:left;padding:10px 12px;border:none;border-left:2px solid ${on ? "var(--fit-green)" : "transparent"};background:${on ? "rgba(56,239,125,.08)" : "transparent"};color:var(--fit-text)">
+        return `<button class="dmrow" onclick="indice.pickDomain('${d.id}')" style="display:block;width:100%;text-align:left;padding:10px 12px;border:none;border-left:2px solid ${on ? "var(--fit-green)" : "transparent"};background:${on ? "rgba(56,239,125,.08)" : "transparent"};color:var(--fit-text)">
       <span style="display:block;font-size:12px;letter-spacing:.06em;font-weight:700;color:${on ? "var(--fit-green)" : "var(--fit-text)"}">${esc(d.name)}</span><span style="display:block;font-size:10px;color:var(--fit-text-muted);line-height:1.4;margin-top:2px">${esc(d.desc)}</span></button>`;
       }).join("");
       return `<div style="position:absolute;top:calc(100% + 8px);right:0;z-index:78;width:320px;border:1px solid var(--fit-border-strong);background:var(--fit-surface);box-shadow:0 12px 34px rgba(0,0,0,.55)">
     <div style="background:var(--fit-titlebar);border-bottom:1px solid var(--fit-border);padding:8px 12px;font-size:11px;letter-spacing:.14em;color:var(--fit-text)">DOMAINES D'INVESTIGATION</div>
     <div style="height:2px;background:linear-gradient(90deg,var(--fit-green),transparent)"></div>
     <div style="padding:8px">${rows}
-      <button class="dmrow" onclick="fitini.openCross()" style="display:flex;gap:10px;align-items:center;width:100%;text-align:left;padding:11px 12px;border:none;border-left:2px solid transparent;border-top:1px solid var(--fit-grid-line);margin-top:4px;background:transparent;color:var(--fit-sage)">
+      <button class="dmrow" onclick="indice.openCross()" style="display:flex;gap:10px;align-items:center;width:100%;text-align:left;padding:11px 12px;border:none;border-left:2px solid transparent;border-top:1px solid var(--fit-grid-line);margin-top:4px;background:transparent;color:var(--fit-sage)">
         <span style="flex:none;font-size:15px;width:14px;text-align:center">⤫</span>
         <span><span style="display:block;font-size:12px;letter-spacing:.06em;font-weight:700">Croisement de sources</span><span style="display:block;font-size:10px;color:var(--fit-text-muted);line-height:1.4;margin-top:2px">Rapprocher deux entités / fichiers.</span></span></button>
     </div></div>`;
@@ -528,11 +528,11 @@
       const el = $("flux-cta"); if (!el) return;
       if (!S.started) el.innerHTML = `<div style="margin:24px auto;text-align:center">
     <div style="font-size:10px;letter-spacing:.28em;color:var(--fit-sage);margin-bottom:14px">ÉCOUTE D'UNE CONVERSATION EN DIRECT</div>
-    <button class="primary" onclick="fitini.listen()">▶ ÉCOUTER (micro)</button>
+    <button class="primary" onclick="indice.listen()">▶ ÉCOUTER (micro)</button>
     ${S.micError ? `<div style="font-size:11px;color:#d8b24a;margin-top:12px;max-width:430px;margin-left:auto;margin-right:auto;line-height:1.5">${esc(S.micError)}</div>` : ""}
     <div id="int-up" style="font-size:11px;color:var(--fit-text-muted);margin-top:12px;max-width:380px;margin-left:auto;margin-right:auto;line-height:1.5">L'analyse démarre automatiquement dès l'écoute. Pour un fichier / enregistrement, utilise <b style="color:var(--fit-sage)">ANALYSE</b>.</div></div>`;
-      else if (S.streaming) el.innerHTML = `<div style="text-align:center;margin:18px auto"><div style="color:var(--fit-sage);font-size:15px;margin-bottom:12px">▌<span style="animation:fit-blink 1s infinite"> écoute…</span></div><button class="actbtn" onclick="fitini.stopFlux()">■ ARRÊTER L'ÉCOUTE</button></div>`;
-      else el.innerHTML = `<div style="text-align:center;margin:18px auto"><button class="primary" onclick="fitini.listen()">\u25b6 \u00c9COUTER (micro)</button><div style="font-size:11px;color:var(--fit-text-faint);margin-top:10px">\u00c9coute arr\u00eat\u00e9e \u2014 relance pour une nouvelle session, ou va dans REPORT.</div></div>`;
+      else if (S.streaming) el.innerHTML = `<div style="text-align:center;margin:18px auto"><div style="color:var(--fit-sage);font-size:15px;margin-bottom:12px">▌<span style="animation:fit-blink 1s infinite"> écoute…</span></div><button class="actbtn" onclick="indice.stopFlux()">■ ARRÊTER L'ÉCOUTE</button></div>`;
+      else el.innerHTML = `<div style="text-align:center;margin:18px auto"><button class="primary" onclick="indice.listen()">\u25b6 \u00c9COUTER (micro)</button><div style="font-size:11px;color:var(--fit-text-faint);margin-top:10px">\u00c9coute arr\u00eat\u00e9e \u2014 relance pour une nouvelle session, ou va dans REPORT.</div></div>`;
     }
     function renderTranscript() {
       const el = $("transcript"); if (!el) return;
@@ -545,7 +545,7 @@
       const segs = ln.segs.map(s => {
         if (!s.label) return `<span>${esc(s.text)}</span>`;
         const dim = S.filterEnt && S.filterEnt !== s.canonical ? " dim" : "";
-        return `<span class="ent${dim}" data-ent="${esc(s.canonical || "")}" onclick="fitini.focus('${esc(s.canonical || "")}')" style="color:${catColor(catOf(s.label))}">${esc(s.text)}</span>`;
+        return `<span class="ent${dim}" data-ent="${esc(s.canonical || "")}" onclick="indice.focus('${esc(s.canonical || "")}')" style="color:${catColor(catOf(s.label))}">${esc(s.text)}</span>`;
       }).join("");
       return `<div style="animation:fit-stream .3s var(--ease);display:grid;grid-template-columns:62px 42px 1fr;gap:10px;align-items:baseline">
     <span style="color:var(--fit-text-faint);font-size:11px">${esc(ln.ts || "")}</span>
@@ -576,9 +576,9 @@
       const el = $("analyzer"); if (!el) return;
       const col = S.done ? "var(--fit-green)" : S.started ? "var(--fit-scanning)" : "var(--fit-text-muted)";
       const lab = S.done ? "INTERCEPT COMPLETE" : S.started ? "STREAM ACTIVE" : "IDLE";
-      const right = S.done ? `<button class="actbtn" onclick="fitini.go('report')">REPORT →</button>` : S.streaming ? `<span style="display:inline-flex;align-items:center;gap:10px"><span style="font-size:10px;color:var(--fit-scanning);animation:fit-pulse 1.4s infinite">● REC</span><button class="actbtn" onclick="fitini.stopFlux()">■ STOP</button></span>` : "";
+      const right = S.done ? `<button class="actbtn" onclick="indice.go('report')">REPORT →</button>` : S.streaming ? `<span style="display:inline-flex;align-items:center;gap:10px"><span style="font-size:10px;color:var(--fit-scanning);animation:fit-pulse 1.4s infinite">● REC</span><button class="actbtn" onclick="indice.stopFlux()">■ STOP</button></span>` : "";
       const row1 = `<div style="display:flex;justify-content:space-between;align-items:center"><span style="display:inline-flex;align-items:center;gap:8px;font-size:11px;letter-spacing:.12em;color:${col}"><span style="width:8px;height:8px;border-radius:50%;background:${col}"></span>${lab}</span>${right}</div>`;
-      const row2 = S.done ? `<button class="actbtn" style="align-self:flex-start" onclick="fitini.listen()">↻ RELANCER L\'ÉCOUTE</button>` : "";
+      const row2 = S.done ? `<button class="actbtn" style="align-self:flex-start" onclick="indice.listen()">↻ RELANCER L\'ÉCOUTE</button>` : "";
       el.innerHTML = row1 + row2;
     }
 
@@ -587,7 +587,7 @@
       const L = []; const dom = (S.domain || "").toUpperCase();
       const ents = S.summary.entities || [], rels = S.relationships || [], flags = S.flags || [], hyps = S.hypotheses || [];
       const tl = (S.timeline || []).filter(e => e.kind !== "lead");
-      L.push("RAPPORT DE SYNTHÈSE — FITINI");
+      L.push("RAPPORT DE SYNTHÈSE — INDICE");
       L.push("Domaine(s) : " + dom + "   ·   Généré : " + new Date().toLocaleString());
       if (S.subject) L.push("Sujet suivi : " + S.subject);
       L.push("");
@@ -609,11 +609,11 @@
     /* ---- REPORT ---- */
     function viewReport() {
       const acts = [["Chronologie", "chrono"], ["Graphe", "graphe"], ["Flags", "flags"], ["Croiser", "cross"], [S.filterEnt ? "Retirer le filtre" : "Filtrer par entité", "filter"]]
-        .map(([l, a]) => `<button class="actbtn" onclick="fitini.action('${a}')">${esc(l)}</button>`).join("");
-      const filterBar = S.filterEnt ? `<div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;padding:8px 10px;border:1px solid var(--fit-green-dim);background:rgba(56,239,125,.07);font-size:11px"><span style="color:var(--fit-green)">FILTRE : ${esc(S.filterEnt)}</span><button class="actbtn" style="margin-left:auto;padding:3px 8px" onclick="fitini.action('filter')">✕ RETIRER</button></div>` : "";
+        .map(([l, a]) => `<button class="actbtn" onclick="indice.action('${a}')">${esc(l)}</button>`).join("");
+      const filterBar = S.filterEnt ? `<div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;padding:8px 10px;border:1px solid var(--fit-green-dim);background:rgba(56,239,125,.07);font-size:11px"><span style="color:var(--fit-green)">FILTRE : ${esc(S.filterEnt)}</span><button class="actbtn" style="margin-left:auto;padding:3px 8px" onclick="indice.action('filter')">✕ RETIRER</button></div>` : "";
       const wsLines = S.lines.length ? (filterBar + S.lines.map(lineHtml).join("")) : `<div style="color:var(--fit-text-faint);font-size:12px">Aucun flux analysé. Lancez un INTERCEPT.</div>`;
       const results = S.results.map(r => `<div style="border:1px solid var(--fit-border);border-left:2px solid var(--fit-green);background:var(--fit-surface-2);padding:10px 12px;animation:fit-flash .6s ease">
-      <div style="display:flex;justify-content:space-between;align-items:center"><span style="font-size:12px;color:var(--fit-green);font-weight:700">${esc(r.title)}</span><button onclick="fitini.dropResult(${r.id})" style="background:none;border:none;color:var(--fit-text-faint)">✕</button></div>
+      <div style="display:flex;justify-content:space-between;align-items:center"><span style="font-size:12px;color:var(--fit-green);font-weight:700">${esc(r.title)}</span><button onclick="indice.dropResult(${r.id})" style="background:none;border:none;color:var(--fit-text-faint)">✕</button></div>
       <div style="font-size:12px;color:var(--fit-text-dim);margin:6px 0 8px;line-height:1.5">${esc(r.body)}</div>
       <div style="font-size:10px;color:var(--fit-text-faint);border-top:1px dashed var(--fit-border);padding-top:7px"><span style="color:var(--fit-sage)">SOURCES ▸</span> ${esc(r.sources)}</div></div>`).join("");
       const hyp = S.hypotheses.slice(0, 4).map(h => {
@@ -639,7 +639,7 @@
       <span style="font-size:10px;letter-spacing:.18em;color:var(--fit-text-faint)">ACTIONS</span>${acts}
       <span style="margin-left:auto;font-size:10px;color:var(--fit-text-faint)">${esc(S.domain.toUpperCase())}</span></div>
     <div style="margin-bottom:20px">${win("Rapport de synthèse", `<div style="padding:12px 16px">
-      <div style="display:flex;gap:8px;margin-bottom:10px"><button class="actbtn" onclick="fitini.copyBrief()">⧉ Copier</button><button class="actbtn" onclick="fitini.downloadBrief()">⭳ Télécharger .txt</button></div>
+      <div style="display:flex;gap:8px;margin-bottom:10px"><button class="actbtn" onclick="indice.copyBrief()">⧉ Copier</button><button class="actbtn" onclick="indice.downloadBrief()">⭳ Télécharger .txt</button></div>
       <pre style="white-space:pre-wrap;font-size:12px;line-height:1.55;color:var(--fit-text-dim);margin:0;max-height:360px;overflow:auto">${esc(buildBrief())}</pre></div>`)}</div>
     <div style="margin-bottom:18px">${win("Corpus · Transcription", `<div style="padding:14px 16px;max-height:420px;overflow:auto;display:flex;flex-direction:column;gap:11px">${wsLines}</div>`)}</div>
     <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(340px,1fr));gap:18px;align-items:start">
@@ -660,7 +660,7 @@
       }).join("");
       const circ = nodes.map(n => {
         const foc = S.filterEnt === n; const sh = n.length > 8 ? n.slice(0, 7) + "…" : n;
-        return `<g onclick="fitini.focus('${esc(n)}')" style="cursor:pointer"><circle cx="${pos[n].x}" cy="${pos[n].y}" r="${foc ? rad + 4 : rad}" fill="var(--fit-surface-3)" stroke="var(--fit-green)" stroke-width="${foc ? 2.4 : 1.3}"></circle><text x="${pos[n].x}" y="${pos[n].y + 3}" text-anchor="middle" font-size="${fs}" fill="var(--fit-green)">${esc(sh)}</text></g>`;
+        return `<g onclick="indice.focus('${esc(n)}')" style="cursor:pointer"><circle cx="${pos[n].x}" cy="${pos[n].y}" r="${foc ? rad + 4 : rad}" fill="var(--fit-surface-3)" stroke="var(--fit-green)" stroke-width="${foc ? 2.4 : 1.3}"></circle><text x="${pos[n].x}" y="${pos[n].y + 3}" text-anchor="middle" font-size="${fs}" fill="var(--fit-green)">${esc(sh)}</text></g>`;
       }).join("");
       return `<svg viewBox="0 0 320 270" style="width:100%;height:auto;display:block">${edges}${circ}</svg>`;
     }
@@ -669,24 +669,24 @@
     function fmtDate(ts) { try { return new Date((ts || 0) * 1000).toISOString().slice(0, 10); } catch (e) { return ""; } }
     function viewDossier() {
       if (S.dossierId && S.dossierData) return viewDossierDetail(S.dossierData);
-      const rows = (S.dossiers || []).map(d => `<div onclick="fitini.openDossier('${d.id}')" style="display:grid;grid-template-columns:140px 1fr 80px 110px;padding:12px 18px;border-bottom:1px solid var(--fit-grid-line);font-size:12px;align-items:center;cursor:pointer"><span style="color:var(--fit-sage)">${esc(d.id)}</span><span style="color:var(--fit-green);font-weight:700">${esc(d.name)}</span><span style="color:var(--fit-text-muted)">${d.count} src</span><span style="color:var(--fit-text-muted)">${esc(fmtDate(d.created_at))}</span></div>`).join("")
+      const rows = (S.dossiers || []).map(d => `<div onclick="indice.openDossier('${d.id}')" style="display:grid;grid-template-columns:140px 1fr 80px 110px;padding:12px 18px;border-bottom:1px solid var(--fit-grid-line);font-size:12px;align-items:center;cursor:pointer"><span style="color:var(--fit-sage)">${esc(d.id)}</span><span style="color:var(--fit-green);font-weight:700">${esc(d.name)}</span><span style="color:var(--fit-text-muted)">${d.count} src</span><span style="color:var(--fit-text-muted)">${esc(fmtDate(d.created_at))}</span></div>`).join("")
         || `<div style="padding:16px;color:var(--fit-text-faint);font-size:12px">Aucun dossier. Créez-en un pour commencer une enquête.</div>`;
       return `<div style="padding:26px 34px;max-width:960px;margin:0 auto"><div style="font-size:22px;letter-spacing:.1em;margin-bottom:18px">DOSSIERS D'ENQUÊTE</div>
     <div class="win" style="max-width:720px;margin-bottom:18px"><div style="padding:16px;display:flex;gap:10px;align-items:center">
-      <input id="dossier-new" value="${esc(S.dossierNew)}" oninput="fitini.setDossierNew(this.value)" onkeydown="if(event.key==='Enter')fitini.createDossier()" placeholder="Nom du dossier (sujet de l'enquête)…" style="flex:1;background:var(--fit-surface-3);border:1px solid var(--fit-border);color:var(--fit-green);font-size:12px;padding:9px 12px;outline:none"/>
-      <button class="actbtn" onclick="fitini.createDossier()">+ NOUVEAU</button></div></div>
+      <input id="dossier-new" value="${esc(S.dossierNew)}" oninput="indice.setDossierNew(this.value)" onkeydown="if(event.key==='Enter')indice.createDossier()" placeholder="Nom du dossier (sujet de l'enquête)…" style="flex:1;background:var(--fit-surface-3);border:1px solid var(--fit-border);color:var(--fit-green);font-size:12px;padding:9px 12px;outline:none"/>
+      <button class="actbtn" onclick="indice.createDossier()">+ NOUVEAU</button></div></div>
     <div class="win" style="max-width:720px"><div style="display:grid;grid-template-columns:140px 1fr 80px 110px;padding:11px 18px;font-size:10px;letter-spacing:.14em;color:var(--fit-text-faint);border-bottom:1px solid var(--fit-border);background:var(--fit-titlebar)"><span>ID</span><span>SUJET</span><span>SOURCES</span><span>CRÉÉ</span></div>${rows}</div></div>`;
     }
     function safeUrl(u) { u = u || ""; const s = u.slice(0, 8).toLowerCase(); return (s.indexOf("http://") === 0 || s.indexOf("https://") === 0) ? u : "#"; }
     function searchWin(d) {
       const checked = S.searchChecked;
-      const rows = (S.searchResults || []).map(r => `<div style="display:grid;grid-template-columns:26px 1fr;gap:8px;padding:10px 14px;border-bottom:1px solid var(--fit-grid-line);font-size:12px"><input type="checkbox" ${checked.has(r.id) ? "checked" : ""} onclick="fitini.toggleCheck('${r.id}')" style="margin-top:3px"/><div><div style="display:flex;gap:8px;flex-wrap:wrap;align-items:baseline"><a href="${esc(safeUrl(r.url))}" target="_blank" rel="noopener" style="color:var(--fit-green);font-weight:700;text-decoration:none">${esc(r.title)}</a><span style="color:var(--fit-text-faint);font-size:10px">${esc(r.platform || "")}${r.published_date ? " \u00b7 " + esc(r.published_date) : ""}</span></div><div style="color:var(--fit-text-muted);margin-top:4px;line-height:1.45">${esc(r.preview || "")}</div></div></div>`).join("");
+      const rows = (S.searchResults || []).map(r => `<div style="display:grid;grid-template-columns:26px 1fr;gap:8px;padding:10px 14px;border-bottom:1px solid var(--fit-grid-line);font-size:12px"><input type="checkbox" ${checked.has(r.id) ? "checked" : ""} onclick="indice.toggleCheck('${r.id}')" style="margin-top:3px"/><div><div style="display:flex;gap:8px;flex-wrap:wrap;align-items:baseline"><a href="${esc(safeUrl(r.url))}" target="_blank" rel="noopener" style="color:var(--fit-green);font-weight:700;text-decoration:none">${esc(r.title)}</a><span style="color:var(--fit-text-faint);font-size:10px">${esc(r.platform || "")}${r.published_date ? " \u00b7 " + esc(r.published_date) : ""}</span></div><div style="color:var(--fit-text-muted);margin-top:4px;line-height:1.45">${esc(r.preview || "")}</div></div></div>`).join("");
       const body = S.searchBusy ? `<div style="padding:16px;color:var(--fit-sage);font-size:12px">Recherche en cours\u2026</div>`
         : S.searchError ? `<div style="padding:16px;color:#e5534b;font-size:12px">${esc(S.searchError)}</div>`
-          : S.searchResults.length ? `${rows}<div style="padding:12px 14px;display:flex;justify-content:flex-end"><button class="actbtn" onclick="fitini.collectChecked()">\u2193 T\u00c9L\u00c9CHARGER / ENREGISTRER (${checked.size})</button></div>`
+          : S.searchResults.length ? `${rows}<div style="padding:12px 14px;display:flex;justify-content:flex-end"><button class="actbtn" onclick="indice.collectChecked()">\u2193 T\u00c9L\u00c9CHARGER / ENREGISTRER (${checked.size})</button></div>`
             : `<div style="padding:16px;color:var(--fit-text-faint);font-size:12px">Saisis une requ\u00eate (ex. \u00ab manifestations \u00bb) puis lance la recherche.</div>`;
       return `<div class="win" style="max-width:900px;margin-bottom:18px"><div class="hd"><span>RECHERCHE DE SOURCES</span><span class="wc"></span></div><div class="rule"></div>
-    <div style="padding:14px 16px;display:flex;gap:10px;align-items:center"><input id="dossier-q" value="${esc(S.searchQ)}" oninput="fitini.setSearchQ(this.value)" onkeydown="if(event.key==='Enter')fitini.dossierSearch()" placeholder="Requ\u00eate sur \u00ab ${esc(d.name)} \u00bb\u2026" style="flex:1;background:var(--fit-surface-3);border:1px solid var(--fit-border);color:var(--fit-green);font-size:12px;padding:9px 12px;outline:none"/><button class="actbtn" onclick="fitini.dossierSearch()">RECHERCHER</button></div>
+    <div style="padding:14px 16px;display:flex;gap:10px;align-items:center"><input id="dossier-q" value="${esc(S.searchQ)}" oninput="indice.setSearchQ(this.value)" onkeydown="if(event.key==='Enter')indice.dossierSearch()" placeholder="Requ\u00eate sur \u00ab ${esc(d.name)} \u00bb\u2026" style="flex:1;background:var(--fit-surface-3);border:1px solid var(--fit-border);color:var(--fit-green);font-size:12px;padding:9px 12px;outline:none"/><button class="actbtn" onclick="indice.dossierSearch()">RECHERCHER</button></div>
     ${body}</div>`;
     }
     const ORIENT = {
@@ -713,7 +713,7 @@
     function juxFilterBar(passages) {
       const present = []; (passages || []).forEach(p => { const o = p.orientation || "unknown"; if (present.indexOf(o) < 0) present.push(o); });
       if (present.length < 2) return "";
-      const chip = (o, label) => `<button class="actbtn" style="padding:4px 10px;${(S.juxFilter || "all") === o ? "background:var(--fit-green);color:var(--fit-ink-on-green)" : ""}" onclick="fitini.setJuxFilter('${o}')">${esc(label)}</button>`;
+      const chip = (o, label) => `<button class="actbtn" style="padding:4px 10px;${(S.juxFilter || "all") === o ? "background:var(--fit-green);color:var(--fit-ink-on-green)" : ""}" onclick="indice.setJuxFilter('${o}')">${esc(label)}</button>`;
       return `<div style="display:flex;gap:6px;flex-wrap:wrap;padding:10px 14px;border-bottom:1px solid var(--fit-grid-line)">${chip("all", "Toutes")}${present.map(o => chip(o, orientInfo(o).l)).join("")}</div>`;
     }
     function analysisBlock() {
@@ -732,20 +732,20 @@
     }
     function viewDossierDetail(d) {
       const srcs = (d.sources || []);
-      const list = srcs.length ? srcs.map(x => `<div style="display:grid;grid-template-columns:90px 1fr 100px 150px;padding:11px 16px;border-bottom:1px solid var(--fit-grid-line);font-size:12px;align-items:center"><span style="color:var(--fit-sage)">${esc(x.type || "src")}</span><span style="color:var(--fit-green)">${esc(x.title || x.url || x.id)}</span><span style="color:var(--fit-text-muted)">${esc(x.published_date || "")}</span><select onchange="fitini.setOrientation('${x.id}', this.value)" style="background:var(--fit-surface-3);border:1px solid var(--fit-border);color:var(--fit-text-muted);font-size:10px;padding:3px 4px;max-width:150px">${["unknown", "media", "pro-gov", "pro-opp", "intl-ngo", "source"].map(o => `<option value="${o}" ${((x.orientation || "unknown") === o) ? "selected" : ""}>${esc(orientInfo(o).l)}</option>`).join("")}</select></div>`).join("")
+      const list = srcs.length ? srcs.map(x => `<div style="display:grid;grid-template-columns:90px 1fr 100px 150px;padding:11px 16px;border-bottom:1px solid var(--fit-grid-line);font-size:12px;align-items:center"><span style="color:var(--fit-sage)">${esc(x.type || "src")}</span><span style="color:var(--fit-green)">${esc(x.title || x.url || x.id)}</span><span style="color:var(--fit-text-muted)">${esc(x.published_date || "")}</span><select onchange="indice.setOrientation('${x.id}', this.value)" style="background:var(--fit-surface-3);border:1px solid var(--fit-border);color:var(--fit-text-muted);font-size:10px;padding:3px 4px;max-width:150px">${["unknown", "media", "pro-gov", "pro-opp", "intl-ngo", "source"].map(o => `<option value="${o}" ${((x.orientation || "unknown") === o) ? "selected" : ""}>${esc(orientInfo(o).l)}</option>`).join("")}</select></div>`).join("")
         : `<div style="padding:16px;color:var(--fit-text-faint);font-size:12px">Aucune source versée. Lance une recherche, coche les sources pertinentes, puis « Télécharger ».</div>`;
-      return `<div style="padding:26px 34px"><div style="display:flex;align-items:center;gap:14px;margin-bottom:18px"><button class="actbtn" onclick="fitini.closeDossier()">← DOSSIERS</button><div style="font-size:22px;letter-spacing:.1em">DOSSIER · ${esc(d.name)}</div><span style="color:var(--fit-text-faint);font-size:11px">${esc(d.id)}</span></div>
-    <div class="win" style="max-width:900px;margin-bottom:18px"><div class="hd"><span>AJOUTER DES FICHIERS AU DOSSIER</span><span class="wc"></span></div><div class="rule"></div><div style="padding:14px 16px"><input type="file" multiple accept=".pdf,.docx,.txt,.md,.csv,audio/*,image/*" onchange="fitini.uploadToDossier(this.files)" style="color:var(--fit-text-muted);font-size:12px"/><div style="font-size:11px;color:var(--fit-text-faint);margin-top:8px">PDF · DOCX · TXT · images (OCR) · audio — extrait/transcrit et versé dans le dossier, hors-ligne.</div><div style="margin-top:8px;font-size:12px;color:var(--fit-sage)">${esc(S.dossierUploadMsg || "")}</div></div></div>
+      return `<div style="padding:26px 34px"><div style="display:flex;align-items:center;gap:14px;margin-bottom:18px"><button class="actbtn" onclick="indice.closeDossier()">← DOSSIERS</button><div style="font-size:22px;letter-spacing:.1em">DOSSIER · ${esc(d.name)}</div><span style="color:var(--fit-text-faint);font-size:11px">${esc(d.id)}</span></div>
+    <div class="win" style="max-width:900px;margin-bottom:18px"><div class="hd"><span>AJOUTER DES FICHIERS AU DOSSIER</span><span class="wc"></span></div><div class="rule"></div><div style="padding:14px 16px"><input type="file" multiple accept=".pdf,.docx,.txt,.md,.csv,audio/*,image/*" onchange="indice.uploadToDossier(this.files)" style="color:var(--fit-text-muted);font-size:12px"/><div style="font-size:11px;color:var(--fit-text-faint);margin-top:8px">PDF · DOCX · TXT · images (OCR) · audio — extrait/transcrit et versé dans le dossier, hors-ligne.</div><div style="margin-top:8px;font-size:12px;color:var(--fit-sage)">${esc(S.dossierUploadMsg || "")}</div></div></div>
     ${searchWin(d)}
     ${win("Sources du dossier (" + srcs.length + ")", list)}
-    ${srcs.length ? `<div style="max-width:900px;margin-top:14px;display:flex;gap:10px;flex-wrap:wrap;align-items:center"><button class="actbtn" onclick="fitini.analyzeDossier()">\u26a1 ANALYSER LE DOSSIER (avant / maintenant)</button><button class="actbtn" onclick="fitini.exportDossier('md')">\u2b07 EXPORT MD</button><button class="actbtn" onclick="fitini.exportDossier('pdf')">\u2b07 EXPORT PDF</button>${S.exportError ? `<span style="color:#e5534b;font-size:11px">${esc(S.exportError)}</span>` : ""}</div>` : ""}
+    ${srcs.length ? `<div style="max-width:900px;margin-top:14px;display:flex;gap:10px;flex-wrap:wrap;align-items:center"><button class="actbtn" onclick="indice.analyzeDossier()">\u26a1 ANALYSER LE DOSSIER (avant / maintenant)</button><button class="actbtn" onclick="indice.exportDossier('md')">\u2b07 EXPORT MD</button><button class="actbtn" onclick="indice.exportDossier('pdf')">\u2b07 EXPORT PDF</button>${S.exportError ? `<span style="color:#e5534b;font-size:11px">${esc(S.exportError)}</span>` : ""}</div>` : ""}
     ${analysisBlock()}</div>`;
     }
     function viewArchive() {
       const rows = S.archive.filter(a => !S.query || ((a.subject || "") + (a.id || "")).toLowerCase().includes(S.query.toLowerCase()))
         .map(a => `<div style="display:grid;grid-template-columns:110px 1fr 120px 110px 90px;padding:12px 18px;border-bottom:1px solid var(--fit-grid-line);font-size:12px;align-items:center"><span style="color:var(--fit-sage)">${esc(a.id)}</span><span style="color:var(--fit-green);font-weight:700">${esc(a.subject)}</span><span style="color:var(--fit-text-muted)">${esc(a.channel || "")}</span><span style="color:var(--fit-text-muted)">${esc(a.date || "")}</span><span style="color:${a.statusColor || "var(--fit-text-muted)"};font-size:10px">● ${esc(a.status || "")}</span></div>`).join("")
         || `<div style="padding:16px;color:var(--fit-text-faint);font-size:12px">Aucun dossier archivé.</div>`;
-      return `<div style="padding:26px 34px;max-width:1000px;margin:0 auto"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:18px;gap:12px;flex-wrap:wrap"><div style="font-size:22px;letter-spacing:.1em">ARCHIVE DES DOSSIERS</div><input value="${esc(S.query)}" oninput="fitini.setQuery(this.value)" placeholder="RECHERCHER…" style="background:var(--fit-surface-3);border:1px solid var(--fit-border);color:var(--fit-green);font-size:12px;padding:8px 12px;outline:none;width:200px"/></div>
+      return `<div style="padding:26px 34px;max-width:1000px;margin:0 auto"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:18px;gap:12px;flex-wrap:wrap"><div style="font-size:22px;letter-spacing:.1em">ARCHIVE DES DOSSIERS</div><input value="${esc(S.query)}" oninput="indice.setQuery(this.value)" placeholder="RECHERCHER…" style="background:var(--fit-surface-3);border:1px solid var(--fit-border);color:var(--fit-green);font-size:12px;padding:8px 12px;outline:none;width:200px"/></div>
     <div class="win"><div style="display:grid;grid-template-columns:110px 1fr 120px 110px 90px;padding:11px 18px;font-size:10px;letter-spacing:.14em;color:var(--fit-text-faint);border-bottom:1px solid var(--fit-border);background:var(--fit-titlebar)"><span>ID</span><span>SUJET</span><span>CANAL</span><span>DATE</span><span>STATUT</span></div>${rows}</div></div>`;
     }
     function viewAnalyze() {
@@ -753,14 +753,14 @@
   <div class="win"><div style="padding:30px;text-align:center"><div style="font-size:34px;color:var(--fit-sage);margin-bottom:12px">⤒</div>
     <div style="font-size:14px;margin-bottom:6px">Déposer un enregistrement, une note vocale ou un texte</div>
     <div style="font-size:11px;color:var(--fit-text-muted);margin-bottom:16px">PDF · DOCX · TXT · WAV · MP3 · M4A · OGG — extrait/transcrit puis analysé, hors-ligne</div>
-    <input type="file" accept="audio/*,.wav,.mp3,.m4a,.ogg,.txt,.md,.csv,.pdf,.docx" onchange="fitini.upload(this.files[0])" style="color:var(--fit-text-muted);font-size:12px"/>
+    <input type="file" accept="audio/*,.wav,.mp3,.m4a,.ogg,.txt,.md,.csv,.pdf,.docx" onchange="indice.upload(this.files[0])" style="color:var(--fit-text-muted);font-size:12px"/>
     <div id="analyze-status" style="margin-top:16px;font-size:12px;color:var(--fit-text-muted)"></div></div></div><div style="font-size:11px;color:var(--fit-text-faint);margin-top:14px;line-height:1.7;text-align:center">Le fichier est extrait/transcrit, analysé, puis le résultat apparaît dans <b style="color:var(--fit-sage)">REPORT</b>. Rien ne quitte ta machine.</div></div>`;
     }
     function viewConfig() {
       const tog = (k, label, hint) => {
         const on = S.settings[k];
         return `<div style="display:flex;justify-content:space-between;align-items:center;padding:12px 16px;border-bottom:1px solid var(--fit-grid-line)"><div><div style="font-size:12px">${esc(label)}</div><div style="font-size:10px;color:var(--fit-text-faint);margin-top:3px">${esc(hint)}</div></div>
-    <button onclick="fitini.toggleSetting('${k}')" style="width:40px;height:20px;border:1px solid ${on ? "var(--fit-green)" : "#2c3233"};background:${on ? "rgba(56,239,125,.15)" : "#0b0d0d"};position:relative;padding:0"><span style="position:absolute;top:1px;left:${on ? "21px" : "1px"};width:16px;height:16px;background:${on ? "var(--fit-green)" : "#4e5856"};transition:left .15s"></span></button></div>`;
+    <button onclick="indice.toggleSetting('${k}')" style="width:40px;height:20px;border:1px solid ${on ? "var(--fit-green)" : "#2c3233"};background:${on ? "rgba(56,239,125,.15)" : "#0b0d0d"};position:relative;padding:0"><span style="position:absolute;top:1px;left:${on ? "21px" : "1px"};width:16px;height:16px;background:${on ? "var(--fit-green)" : "#4e5856"};transition:left .15s"></span></button></div>`;
       };
       return `<div style="padding:26px 34px;max-width:680px"><div style="font-size:22px;letter-spacing:.1em;margin-bottom:20px">CONFIGURATION DU MOTEUR</div>
     ${win("Moteur", tog("vad", "Silero VAD", "Gating voix (mode micro)") + tog("diarize", "Diarisation", "Séparer les locuteurs") + tog("autolock", "Verrou automatique", "Verrouiller à la corrélation") + tog("redact", "Masquer PII", "Caviarder les identifiants"))}</div>`;
@@ -771,32 +771,32 @@
       const out = S.termLines.map(l => `<div style="color:${l.c || "var(--fit-text-dim)"};white-space:pre-wrap">${esc(l.t)}</div>`).join("");
       const guide = CMDS.map(c => `<div style="margin-bottom:6px"><span style="color:var(--fit-green)">${esc(c.cmd)}</span> <span style="color:var(--fit-text-muted)">— ${esc(c.desc)}</span></div>`).join("");
       return `<div style="position:fixed;left:0;right:0;bottom:0;height:280px;z-index:90;background:#07090a;border-top:1px solid var(--fit-green-dim);display:flex;flex-direction:column">
-    <div style="display:flex;justify-content:space-between;padding:7px 14px;border-bottom:1px solid var(--fit-border);font-size:11px;letter-spacing:.1em;color:var(--fit-sage)"><span>TERMINAL DE COMMANDES</span><button onclick="fitini.toggleTerm()" style="background:none;border:1px solid var(--fit-border);color:var(--fit-text-muted);padding:3px 8px;font-size:10px">▼ FERMER</button></div>
+    <div style="display:flex;justify-content:space-between;padding:7px 14px;border-bottom:1px solid var(--fit-border);font-size:11px;letter-spacing:.1em;color:var(--fit-sage)"><span>TERMINAL DE COMMANDES</span><button onclick="indice.toggleTerm()" style="background:none;border:1px solid var(--fit-border);color:var(--fit-text-muted);padding:3px 8px;font-size:10px">▼ FERMER</button></div>
     <div style="flex:1;display:grid;grid-template-columns:1fr 280px;min-height:0">
       <div id="term-out" style="overflow:auto;padding:10px 14px;font-size:13px;line-height:1.5">${out}</div>
       <div style="border-left:1px solid var(--fit-border);padding:10px 14px;overflow:auto;font-size:12px"><div style="font-size:10px;letter-spacing:.18em;color:var(--fit-text-faint);margin-bottom:10px">COMMANDES</div>${guide}</div>
     </div>
     <div style="display:flex;align-items:center;gap:8px;padding:8px 14px;border-top:1px solid var(--fit-border)"><span style="color:var(--fit-green)">▸</span>
-      <input id="term-in" onkeydown="fitini.termKey(event)" placeholder="chrono · cross A B · link &lt;entité&gt; · find &lt;mot&gt; · help" style="flex:1;background:transparent;border:none;outline:none;color:var(--fit-green);font-size:13px"/></div></div>`;
+      <input id="term-in" onkeydown="indice.termKey(event)" placeholder="chrono · cross A B · link &lt;entité&gt; · find &lt;mot&gt; · help" style="flex:1;background:transparent;border:none;outline:none;color:var(--fit-green);font-size:13px"/></div></div>`;
     }
     function crossModal() {
       const opts = S.summary.entities.map(e => `<option value="${esc(e)}">${esc(e)}</option>`).join("");
-      return `<div onclick="fitini.closeCross()" style="position:fixed;inset:0;z-index:95;background:rgba(0,0,0,.6);display:flex;align-items:center;justify-content:center">
+      return `<div onclick="indice.closeCross()" style="position:fixed;inset:0;z-index:95;background:rgba(0,0,0,.6);display:flex;align-items:center;justify-content:center">
     <div onclick="event.stopPropagation()" class="win" style="width:360px"><div class="hd"><span>Croisement de sources</span><span class="wc">- □ x</span></div><div class="rule"></div>
     <div style="padding:16px;display:flex;flex-direction:column;gap:12px">
       <select id="crossA" style="background:var(--fit-surface-3);border:1px solid var(--fit-border);color:var(--fit-green);padding:8px">${opts}</select>
       <select id="crossB" style="background:var(--fit-surface-3);border:1px solid var(--fit-border);color:var(--fit-green);padding:8px">${opts}</select>
-      <button class="primary" onclick="fitini.runCross()">CROISER →</button></div></div></div>`;
+      <button class="primary" onclick="indice.runCross()">CROISER →</button></div></div></div>`;
     }
     function alertModal(a) {
       const subj = S.summary.locked || (S.summary.entities[0] || "");
-      return `<div onclick="fitini.closeAlert()" style="position:fixed;inset:0;z-index:98;background:rgba(12,2,2,.55);display:flex;align-items:center;justify-content:center">
+      return `<div onclick="indice.closeAlert()" style="position:fixed;inset:0;z-index:98;background:rgba(12,2,2,.55);display:flex;align-items:center;justify-content:center">
     <div onclick="event.stopPropagation()" style="width:430px;border:1px solid var(--fit-alert);background:var(--fit-surface);box-shadow:0 0 40px rgba(226,87,79,.3)">
       <div style="display:flex;justify-content:space-between;align-items:center;background:rgba(226,87,79,.12);border-bottom:1px solid var(--fit-alert);padding:10px 14px;font-size:12px;letter-spacing:.14em;color:var(--fit-alert)"><span>⚠ ALERTE — ${esc(a.urgency || "MENACE")}</span><span class="wc">- □ x</span></div>
       <div style="padding:18px">
         <div style="font-size:15px;color:var(--fit-alert);font-weight:700;letter-spacing:.06em;margin-bottom:10px">${esc(a.name || "ALERTE")}${a.value ? ' · ' + esc(a.value) : ''}</div>
         <div style="font-size:13px;color:var(--fit-text-dim);line-height:1.5;margin-bottom:18px">${esc(a.message || "")}${subj ? ' Corrélé au sujet <span style="color:var(--fit-green)">' + esc(subj) + '</span>.' : ''}</div>
-        <div style="display:flex;gap:10px;justify-content:flex-end"><button class="actbtn" onclick="fitini.closeAlert()">FERMER</button><button class="primary" onclick="fitini.escalate()">ESCALADER → REPORT</button></div>
+        <div style="display:flex;gap:10px;justify-content:flex-end"><button class="actbtn" onclick="indice.closeAlert()">FERMER</button><button class="primary" onclick="indice.escalate()">ESCALADER → REPORT</button></div>
       </div></div></div>`;
     }
     function showAlert(a) { S.alert = a; const m = $("modal-root"); if (m) m.innerHTML = alertModal(a); }
@@ -921,7 +921,7 @@
     }
 
     /* handlers */
-    window.fitini = {
+    window.indice = {
       openDoc: (k) => { S.docView = k; render(); },
       closeDoc: () => { S.docView = null; render(); },
       doLogin: async () => {
@@ -929,7 +929,7 @@
         const pass = (($("login-pass") || {}).value) || "";
         try {
           const r = await api("/api/login", { method: "POST", json: { operator_id: op, passphrase: pass } });
-          S.token = r.token; try { localStorage.setItem("fitini_tok", S.token); } catch (e) { }
+          S.token = r.token; try { localStorage.setItem("indice_tok", S.token); } catch (e) { }
           S.needLogin = false; S.loginErr = ""; S.opId = op;
           await bootAfterAuth();
         } catch (e) { S.loginErr = "Identifiants refusés."; render(); }
@@ -942,7 +942,7 @@
       listen: () => { S.micMode = true; S.interceptSource = ""; startFlux(); },
       stopFlux: () => { if (ws) { try { ws.close(); } catch (e) { } } S.streaming = false; S.done = true; S.micMode = false; renderFluxCta(); renderAnalyzer(); },
       copyBrief: () => { try { navigator.clipboard.writeText(buildBrief()); } catch (e) { } },
-      downloadBrief: () => { const b = new Blob([buildBrief()], { type: "text/plain;charset=utf-8" }); const u = URL.createObjectURL(b); const a = document.createElement("a"); a.href = u; a.download = "fitini-rapport.txt"; document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(u), 2000); },
+      downloadBrief: () => { const b = new Blob([buildBrief()], { type: "text/plain;charset=utf-8" }); const u = URL.createObjectURL(b); const a = document.createElement("a"); a.href = u; a.download = "indice-rapport.txt"; document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(u), 2000); },
       pickDomain: (id) => { S.domain = id; S.domainsOpen = false; resetFlux(); render(); },
       openCross: () => { S.domainsOpen = false; S.crossOpen = true; render(); },
       startFlux,
@@ -985,7 +985,7 @@
         S.dossierUploadMsg = (ok ? (ok + " fichier(s) ajouté(s). Classe l'orientation, puis ANALYSER. ") : "") + (errs.length ? ("Échec : " + errs.join(" | ")) : "");
         render();
       },
-      setOrientation: async (sid, o) => { if (!S.dossierId) return; try { const r = await api("/api/dossier/" + S.dossierId + "/source/" + sid + "/orientation", { method: "POST", json: { orientation: o } }); if (r && r.id) S.dossierData = r; } catch (e) { } if (S.dossierAnalysis && !S.dossierAnalysis.busy) { fitini.analyzeDossier(); } else { render(); } },
+      setOrientation: async (sid, o) => { if (!S.dossierId) return; try { const r = await api("/api/dossier/" + S.dossierId + "/source/" + sid + "/orientation", { method: "POST", json: { orientation: o } }); if (r && r.id) S.dossierData = r; } catch (e) { } if (S.dossierAnalysis && !S.dossierAnalysis.busy) { indice.analyzeDossier(); } else { render(); } },
       exportDossier: async (fmt) => {
         if (!S.dossierId) return;
         S.exportError = null; render();
