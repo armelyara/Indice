@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "indice"
 version = "0.3.0" 
-description = "Indice — Les murs ont des oreilles"
+description = "Indice — Interface d'analyse vocale et textuelle pour enquête et recherche"
 readme = "README.md"
 requires-python = ">=3.10"
 license = "Apache-2.0"

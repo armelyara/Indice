@@ -9,7 +9,7 @@
 </p>
 
 
-« Les murs ont des oreilles. » Indice analyse des **sources texte et audio** (les fichiers de l'utilisateur, ou des sources web qu'il verse lui-même) pour mener une investigation : il extrait les entités d'intérêt, les corrèle, bâtit un graphe et une chronologie, flague les signaux et monte un **dossier d'enquête**
+Indice analyse des **sources texte et audio** pour mener une investigation : il extrait les entités d'intérêt, les corrèle, bâtit un graphe et une chronologie, flague les signaux et aide à monter un **dossier d'enquête ou de recherche**
 
 Trois domaines (packs de connaissances) : **cybersécurité (CTI)**, **justice / Journalisme**, **santé / biomédical / pharmacovigilance**.
 
