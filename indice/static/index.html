@@ -319,7 +319,7 @@
       { cmd: "link <entité>", desc: "relations d'une entité" }, { cmd: "find <mot>", desc: "recherche plein-texte" },
       { cmd: "help · clear", desc: "guide · effacer" },
     ];
-    const NAV = [["intercept", "01 INTERCEPT"], ["analyze", "02 ANALYSE"], ["report", "03 REPORT"], ["dossier", "04 DOSSIER"], ["archive", "05 ARCHIVE"], ["config", "06 CONFIG"]];
+    const NAV = [["intercept", "INTERCEPT"], ["analyze", "ANALYSE"], ["report", "REPORT"], ["dossier", "DOSSIER"], ["archive", "ARCHIVE"], ["config", "CONFIG"]];
 
     const S = {
       screen: "intercept", token: localStorage.getItem("indice_tok") || null, opId: "ANALYSTE", needLogin: false, loginErr: "", docView: null, clock: "--:--:-- UTC",
@@ -747,12 +747,12 @@
     <div class="win"><div style="display:grid;grid-template-columns:110px 1fr 120px 110px 90px;padding:11px 18px;font-size:10px;letter-spacing:.14em;color:var(--fit-text-faint);border-bottom:1px solid var(--fit-border);background:var(--fit-titlebar)"><span>ID</span><span>SUJET</span><span>CANAL</span><span>DATE</span><span>STATUT</span></div>${rows}</div></div>`;
     }
     function viewAnalyze() {
-      return `<div style="padding:22px 28px;max-width:720px;margin:0 auto"><div style="font-size:11px;letter-spacing:.2em;color:var(--fit-sage);margin-bottom:16px">INGESTION — ENREGISTREMENT / NOTE VOCALE · HORS-LIGNE</div>
+      return `<div style="padding:22px 28px;max-width:720px;margin:0 auto"><div style="font-size:11px;letter-spacing:.2em;color:var(--fit-sage);margin-bottom:16px">INGESTION — ENREGISTREMENT / NOTE VOCALE</div>
   <div class="win"><div style="padding:30px;text-align:center"><div style="font-size:34px;color:var(--fit-sage);margin-bottom:12px">⤒</div>
     <div style="font-size:14px;margin-bottom:6px">Déposer un enregistrement, une note vocale ou un texte</div>
-    <div style="font-size:11px;color:var(--fit-text-muted);margin-bottom:16px">PDF · DOCX · TXT · WAV · MP3 · M4A · OGG — extrait/transcrit puis analysé, hors-ligne</div>
+    <div style="font-size:11px;color:var(--fit-text-muted);margin-bottom:16px">PDF · DOCX · TXT · WAV · MP3 · M4A · OGG</div>
     <input type="file" accept="audio/*,.wav,.mp3,.m4a,.ogg,.txt,.md,.csv,.pdf,.docx" onchange="indice.upload(this.files[0])" style="color:var(--fit-text-muted);font-size:12px"/>
-    <div id="analyze-status" style="margin-top:16px;font-size:12px;color:var(--fit-text-muted)"></div></div></div><div style="font-size:11px;color:var(--fit-text-faint);margin-top:14px;line-height:1.7;text-align:center">Le fichier est extrait/transcrit, analysé, puis le résultat apparaît dans <b style="color:var(--fit-sage)">REPORT</b>. Rien ne quitte ta machine.</div></div>`;
+    <div id="analyze-status" style="margin-top:16px;font-size:12px;color:var(--fit-text-muted)"></div></div></div><div style="font-size:11px;color:var(--fit-text-faint);margin-top:14px;line-height:1.7;text-align:center">Le résultat se trouve dans <b style="color:var(--fit-sage)">REPORT</b></div></div>`;
     }
     function viewConfig() {
       const tog = (k, label, hint) => {
