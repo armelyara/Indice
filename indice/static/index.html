@@ -742,7 +742,7 @@
       if (!g) return `<div style="height:100%;display:flex;flex-direction:column;padding:26px 34px"><div style="display:flex;align-items:center;gap:14px;margin-bottom:18px">${back}<div style="font-size:20px;letter-spacing:.1em">VUE D'ENQUÊTE · ${esc(d.name)}</div></div><div style="color:var(--fit-sage);font-size:12px">Construction du graphe…</div></div>`;
       const c = g.counts || {};
       const hudRow = (k, l) => { const on = S.graphSort === k; return `<div data-sort="${k}" onclick="indice.setSort('${k}')" style="padding:7px 13px;cursor:pointer;font-size:11px;letter-spacing:.08em;background:${on ? "var(--fit-green)" : "transparent"};color:${on ? "var(--fit-ink-on-green)" : "var(--fit-text-dim)"}">${esc(l)}</div>`; };
-      const hud = `<div id="ghud" style="position:absolute;right:120px;top:32%;z-index:30;backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);background:rgba(18,26,32,.6);border:1px solid rgba(255,255,255,.18);min-width:152px;box-shadow:0 8px 28px rgba(0,0,0,.45)"><div style="padding:7px 13px;font-size:10px;letter-spacing:.2em;color:#8fd3da;border-bottom:1px solid rgba(255,255,255,.12)">ORGANISER PAR</div>${SORTS.map(([k, l]) => hudRow(k, l)).join("")}</div>`;
+      const hud = `<div id="ghud" style="position:absolute;right:120px;top:32%;z-index:30;backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);background:rgba(18,26,32,.6);border:1px solid rgba(255,255,255,.18);min-width:152px;box-shadow:0 8px 28px rgba(0,0,0,.45)"><div id="ghud-head" style="padding:7px 13px;font-size:10px;letter-spacing:.2em;color:#8fd3da;border-bottom:1px solid rgba(255,255,255,.12);cursor:move;user-select:none;display:flex;justify-content:space-between;align-items:center"><span>ORGANISER PAR</span><span style="color:rgba(255,255,255,.3);font-size:12px">∷</span></div>${SORTS.map(([k, l]) => hudRow(k, l)).join("")}</div>`;
       const types = srcTypes(g);
       const railItem = (k, l) => { const on = (S.srcFilter || "all") === k; return `<div data-src="${k}" onclick="indice.setSrcFilter('${k}')" style="padding:8px 6px;cursor:pointer;font-size:10px;letter-spacing:.1em;text-align:center;border:1px solid ${on ? "var(--fit-green)" : "var(--fit-border)"};color:${on ? "var(--fit-green)" : "var(--fit-text-muted)"};background:rgba(20,28,34,.5);backdrop-filter:blur(6px)">${esc(l)}</div>`; };
       const rail = `<div id="grail" style="position:absolute;right:16px;top:16px;z-index:25;width:92px;display:flex;flex-direction:column;gap:8px"><div style="font-size:9px;letter-spacing:.16em;color:var(--fit-text-faint);text-align:center;margin-bottom:2px">SOURCES</div>${railItem("all", "TOUT")}${types.map(t => railItem(t, (t || "src").toUpperCase())).join("")}</div>`;
@@ -879,6 +879,16 @@
       gRebuildCards(); gLayout(true);
     }
     function gOnResize() { if (GV) gLayout(false); }
+    function gHudDraggable() {
+      const hud = document.getElementById("ghud"), head = document.getElementById("ghud-head"), wrap = GV && GV.wrap;
+      if (!hud || !head || !wrap) return;
+      try { const sv = JSON.parse(localStorage.getItem("indice_hud") || "null"); if (sv && typeof sv.x === "number") { hud.style.left = sv.x + "px"; hud.style.top = sv.y + "px"; hud.style.right = "auto"; } } catch (e) { }
+      let drag = null;
+      head.addEventListener("pointerdown", (e) => { const r = hud.getBoundingClientRect(), wr = wrap.getBoundingClientRect(); drag = { dx: e.clientX - r.left, dy: e.clientY - r.top, wr: wr }; try { head.setPointerCapture(e.pointerId); } catch (_e) { } e.preventDefault(); });
+      head.addEventListener("pointermove", (e) => { if (!drag) return; let x = e.clientX - drag.wr.left - drag.dx, y = e.clientY - drag.wr.top - drag.dy; x = Math.max(0, Math.min(x, wrap.clientWidth - hud.offsetWidth)); y = Math.max(0, Math.min(y, wrap.clientHeight - hud.offsetHeight)); hud.style.left = x + "px"; hud.style.top = y + "px"; hud.style.right = "auto"; });
+      const end = () => { if (!drag) return; drag = null; try { localStorage.setItem("indice_hud", JSON.stringify({ x: parseFloat(hud.style.left) || 0, y: parseFloat(hud.style.top) || 0 })); } catch (_e) { } };
+      head.addEventListener("pointerup", end); head.addEventListener("pointercancel", end);
+    }
     function graphMount() {
       const wrap = document.getElementById("gwrap");
       if (!wrap || !S.graphData || !S.dossierData) return;
@@ -888,6 +898,7 @@
       window.addEventListener("resize", gOnResize);
       gRebuildCards();
       gLayout(false);
+      gHudDraggable();
     }
     function viewDossierDetail(d) {
       if (S.graphView) return viewGraph(d);
