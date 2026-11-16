@@ -233,6 +233,15 @@ async def dossier_analyze_ep(dossier_id: str, selectors: Optional[str] = Query(N
         raise HTTPException(status_code=404, detail="Dossier not found")
     return dossier_analyze.analyze(d, selectors or "")
 
+@app.get("/api/dossier/{dossier_id}/graph")
+async def dossier_graph_ep(dossier_id: str, selectors: Optional[str] = Query(None),
+                           _: str = Depends(require_auth)):
+    # Deterministic {nodes, edges, events} for the interactive investigation view.
+    d = dossiers.get_dossier(dossier_id)
+    if not d:
+        raise HTTPException(status_code=404, detail="Dossier not found")
+    return dossier_analyze.build_graph(d, selectors or "")
+
 
 @app.post("/api/dossier/{dossier_id}/source/{source_id}/orientation")
 async def set_source_orientation_ep(dossier_id: str, source_id: str, body: OrientationBody,

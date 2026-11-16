@@ -6,6 +6,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Indice</title>
   <link rel="icon" type="image/png" href="/static/indice_logo.png">
+  <script src="/static/cytoscape.min.js"></script>
   <style>
     :root {
       --mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
@@ -334,7 +335,7 @@
       dossiers: [], dossierId: null, dossierData: null, dossierNew: "",
       winMin: new Set(), winMax: null, winClosed: new Set(), micError: null,
       searchQ: "", searchResults: [], searchChecked: new Set(), searchError: null, searchBusy: false,
-      dossierAnalysis: null, exportError: null, juxFilter: "all", dossierUploadMsg: "",
+      dossierAnalysis: null, exportError: null, juxFilter: "all", dossierUploadMsg: "", graphView: false, graphData: null, graphLayout: "relations", graphCatFilter: "all",
     };
     let ws = null;
     function emptyRows() { return []; }
@@ -435,6 +436,7 @@
       if (S.needLogin) { $("app").innerHTML = loginScreen(); const i = $("login-pass"); if (i) setTimeout(() => i.focus(), 30); return; }
       $("app").innerHTML = shell(content());
       if (S.screen === "intercept") { interceptMount(); }
+      if (S.screen === "dossier" && S.graphView) { setTimeout(graphMount, 0); }
       if (S.termOpen) setTimeout(() => { const i = $("term-in"); if (i) i.focus(); }, 30);
     }
     function shell(main) {
@@ -728,7 +730,91 @@
     ${win("Entit\u00e9s extraites", `<div style="padding:14px 16px;display:flex;flex-wrap:wrap;gap:8px">${ents}</div>`)}
   </div>`;
     }
+    let CY = null;
+    function graphCats(g, layout) {
+      const set = [];
+      if (layout === "relations") { (g.nodes || []).forEach(n => { if (n.kind === "entity" && set.indexOf(n.category) < 0) set.push(n.category); }); }
+      else { (g.events || []).forEach(e => { if (set.indexOf(e.category) < 0) set.push(e.category); }); }
+      return set.sort();
+    }
+    function viewGraph(d) {
+      const g = S.graphData;
+      const back = `<button class="actbtn" onclick="indice.closeGraph()">← DOSSIER</button>`;
+      if (!g) return `<div style="height:100%;display:flex;flex-direction:column;padding:26px 34px"><div style="display:flex;align-items:center;gap:14px;margin-bottom:18px">${back}<div style="font-size:20px;letter-spacing:.1em">VUE D'ENQUÊTE · ${esc(d.name)}</div></div><div style="color:var(--fit-sage);font-size:12px">Construction du graphe…</div></div>`;
+      const relOn = S.graphLayout === "relations";
+      const tglBtn = (k, l) => `<button class="actbtn" style="border:0;${(relOn ? "relations" : "timeline") === k ? "background:var(--fit-green);color:var(--fit-ink-on-green)" : ""}" onclick="indice.setGraphLayout('${k}')">${l}</button>`;
+      const toggle = `<div style="display:flex;border:1px solid var(--fit-border)">${tglBtn("relations", "RELATIONS")}${tglBtn("timeline", "CHRONOLOGIE")}</div>`;
+      const cats = graphCats(g, S.graphLayout);
+      const chip = (c, l) => `<button class="actbtn" style="padding:4px 10px;${(S.graphCatFilter || "all") === c ? "background:var(--fit-green);color:var(--fit-ink-on-green)" : ""}" onclick="indice.setGraphCat('${c}')">${esc(l)}</button>`;
+      const chips = `<div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center">${chip("all", "Tout")}${cats.map(c => chip(c, c)).join("")}</div>`;
+      const c = g.counts || {};
+      const meta = `<span style="color:var(--fit-text-faint);font-size:11px">${c.entities || 0} entités · ${c.sources || 0} sources · ${c.events || 0} datées</span>`;
+      const hint = relOn ? "Relations : nœuds = entités, liens = co-mentions ; les plus connectées au centre." : "Chronologie : une source datée = un point, de gauche (ancien) à droite (récent).";
+      return `<div style="height:100%;display:flex;flex-direction:column;padding:18px 24px;box-sizing:border-box">
+    <div style="display:flex;align-items:center;gap:14px;margin-bottom:12px;flex-wrap:wrap">${back}<div style="font-size:18px;letter-spacing:.08em">VUE D'ENQUÊTE · ${esc(d.name)}</div>${meta}</div>
+    <div style="display:flex;gap:14px;align-items:center;margin-bottom:6px;flex-wrap:wrap">${toggle}${chips}</div>
+    <div style="font-size:10px;color:var(--fit-text-faint);margin-bottom:10px">${hint}</div>
+    <div style="flex:1;min-height:0;display:grid;grid-template-columns:1fr 300px;gap:14px">
+      <div class="win" style="min-height:0;display:flex;flex-direction:column"><div id="cy" style="flex:1;min-height:0;background:var(--fit-surface-2)"></div></div>
+      <div class="win" style="min-height:0;display:flex;flex-direction:column"><div class="hd"><span>PROVENANCE</span><span class="wc"></span></div><div class="rule"></div><div id="prov-panel" style="flex:1;min-height:0;overflow-y:auto;padding:12px 14px;font-size:12px;color:var(--fit-text-muted)">Clique un nœud ou un lien pour voir ses sources.</div></div>
+    </div></div>`;
+    }
+    function srcMap() { const m = {}; ((S.graphData || {}).nodes || []).forEach(n => { if (n.kind === "source") m[n.id] = n; }); return m; }
+    function setProvHtml(h) { const el = document.getElementById("prov-panel"); if (el) el.innerHTML = h; }
+    function provSrcList(srcs) {
+      if (!srcs.length) return `<div style="color:var(--fit-text-faint)">Aucune source.</div>`;
+      return srcs.map(s => `<div style="padding:8px 0;border-bottom:1px solid var(--fit-grid-line)"><div style="color:var(--fit-text)">${esc(s.label)}</div><div style="color:var(--fit-text-faint);font-size:10px;margin-top:2px">${esc(s.date || "")} · ${esc(s.category || "")} ${s.url ? `· <a href="${esc(safeUrl(s.url))}" target="_blank" rel="noopener" style="color:var(--fit-sage)">ouvrir ↗</a>` : ""}</div></div>`).join("");
+    }
+    function showProv(data) {
+      const g = S.graphData || {}; const M = srcMap();
+      if (data.kind === "entity") {
+        const node = (g.nodes || []).find(n => n.id === data.id) || {};
+        const srcs = (node.sources || []).map(sid => M["s:" + sid]).filter(Boolean);
+        setProvHtml(`<div style="color:var(--fit-green);font-weight:700;font-size:13px;margin-bottom:2px">${esc(node.label || "")}</div><div style="color:var(--fit-text-faint);font-size:10px;margin-bottom:10px">${esc(node.category || "")} · ${node.count || 0} mentions · ${srcs.length} source(s)</div>` + provSrcList(srcs));
+      } else if (data.kind === "cooccur") {
+        const e = (g.edges || []).find(x => x.id === data.id) || {};
+        const srcs = (e.provenance || []).map(sid => M["s:" + sid]).filter(Boolean);
+        setProvHtml(`<div style="color:var(--fit-green);font-weight:700;font-size:13px;margin-bottom:2px">${esc((data.source || "").slice(2))} ↔ ${esc((data.target || "").slice(2))}</div><div style="color:var(--fit-text-faint);font-size:10px;margin-bottom:10px">co-mentionnés dans ${srcs.length} source(s)</div>` + provSrcList(srcs));
+      } else if (data.kind === "event") {
+        const s = M["s:" + data.source_id] || {};
+        setProvHtml(`<div style="color:var(--fit-green);font-weight:700;font-size:13px;margin-bottom:2px">${esc(s.label || data.label || "")}</div><div style="color:var(--fit-text-faint);font-size:10px;margin-bottom:10px">${esc(data.date || "")} · ${esc(data.category || "")} ${orientBadge(data.orientation)}</div>` + (s.url ? `<a href="${esc(safeUrl(s.url))}" target="_blank" rel="noopener" style="color:var(--fit-sage);font-size:11px">Ouvrir la source ↗</a>` : "") + (s.entities && s.entities.length ? `<div style="margin-top:10px;color:var(--fit-text-faint);font-size:10px">Entités : ${esc(s.entities.join(", "))}</div>` : ""));
+      }
+    }
+    function graphMount() {
+      const el = document.getElementById("cy"); const g = S.graphData;
+      if (!el || !g || typeof cytoscape === "undefined") return;
+      const cat = S.graphCatFilter || "all";
+      let elements = [], layout;
+      if (S.graphLayout === "relations") {
+        const ents = (g.nodes || []).filter(n => n.kind === "entity" && (cat === "all" || n.category === cat));
+        const ids = {}; ents.forEach(n => { ids[n.id] = 1; });
+        ents.forEach(n => elements.push({ data: { id: n.id, label: n.label, kind: "entity", cat: n.category, count: n.count || 1, sel: !!n.is_selector } }));
+        (g.edges || []).filter(e => e.kind === "cooccur" && ids[e.source] && ids[e.target]).forEach(e => elements.push({ data: { id: e.id, source: e.source, target: e.target, kind: "cooccur", weight: e.weight || 1 } }));
+        layout = { name: "concentric", concentric: n => n.data("count") || 1, levelWidth: () => 4, minNodeSpacing: 28, animate: true, animationDuration: 400 };
+      } else {
+        const evs = (g.events || []).filter(e => cat === "all" || e.category === cat).slice().sort((a, b) => (a.date || "").localeCompare(b.date || ""));
+        const W = Math.max(1, evs.length - 1), spanW = Math.max(600, evs.length * 120);
+        evs.forEach((e, i) => elements.push({ data: { id: e.id, label: (e.date || "?") + " · " + e.label, kind: "event", cat: e.category, count: 1, source_id: e.source_id, url: e.url, orientation: e.orientation, date: e.date }, position: { x: (evs.length > 1 ? i / W : 0) * spanW, y: (i % 2 === 0 ? 0 : 90) } }));
+        layout = { name: "preset", animate: true, animationDuration: 400, fit: true, padding: 40 };
+      }
+      if (CY) { try { CY.destroy(); } catch (e) { } CY = null; }
+      CY = cytoscape({
+        container: el, elements: elements, wheelSensitivity: 0.2, minZoom: 0.2, maxZoom: 3,
+        style: [
+          { selector: "node", style: { "background-color": "#2a3a33", "label": "data(label)", "color": "#cfe0d8", "font-size": "10px", "text-wrap": "wrap", "text-max-width": "120px", "text-valign": "bottom", "text-margin-y": 4, "width": "mapData(count,0,20,16,46)", "height": "mapData(count,0,20,16,46)", "border-width": 1, "border-color": "#3c5248" } },
+          { selector: "node[?sel]", style: { "background-color": "#78a890", "border-color": "#38ef7d", "border-width": 2 } },
+          { selector: 'node[kind="event"]', style: { "shape": "round-rectangle", "background-color": "#1f2d28", "width": 14, "height": 14, "border-color": "#5aa9e6" } },
+          { selector: "edge", style: { "line-color": "#2f4138", "width": "mapData(weight,1,6,1,5)", "curve-style": "haystack", "opacity": 0.7 } },
+          { selector: ":selected", style: { "border-color": "#38ef7d", "border-width": 3, "line-color": "#38ef7d" } }
+        ],
+        layout: layout
+      });
+      CY.on("tap", "node", evt => showProv(evt.target.data()));
+      CY.on("tap", "edge", evt => showProv(evt.target.data()));
+      CY.on("tap", evt => { if (evt.target === CY) setProvHtml("Clique un nœud ou un lien pour voir ses sources."); });
+    }
     function viewDossierDetail(d) {
+      if (S.graphView) return viewGraph(d);
       const srcs = (d.sources || []);
       const list = srcs.length ? srcs.map(x => `<div style="display:grid;grid-template-columns:90px 1fr 100px 150px;padding:11px 16px;border-bottom:1px solid var(--fit-grid-line);font-size:12px;align-items:center"><span style="color:var(--fit-sage)">${esc(x.type || "src")}</span><span style="color:var(--fit-green)">${esc(x.title || x.url || x.id)}</span><span style="color:var(--fit-text-muted)">${esc(x.published_date || "")}</span><select onchange="indice.setOrientation('${x.id}', this.value)" style="background:var(--fit-surface-3);border:1px solid var(--fit-border);color:var(--fit-text-muted);font-size:10px;padding:3px 4px;max-width:150px">${["unknown", "media", "pro-gov", "pro-opp", "intl-ngo", "source"].map(o => `<option value="${o}" ${((x.orientation || "unknown") === o) ? "selected" : ""}>${esc(orientInfo(o).l)}</option>`).join("")}</select></div>`).join("")
         : `<div style="padding:16px;color:var(--fit-text-faint);font-size:12px">Aucune source versée. Lance une recherche, coche les sources pertinentes, puis « Télécharger ».</div>`;
@@ -736,7 +822,7 @@
     <div class="win" style="max-width:900px;margin-bottom:18px"><div class="hd"><span>AJOUTER DES FICHIERS AU DOSSIER</span><span class="wc"></span></div><div class="rule"></div><div style="padding:14px 16px"><input type="file" multiple accept=".pdf,.docx,.txt,.md,.csv,audio/*,image/*" onchange="indice.uploadToDossier(this.files)" style="color:var(--fit-text-muted);font-size:12px"/><div style="font-size:11px;color:var(--fit-text-faint);margin-top:8px">PDF · DOCX · TXT · images (OCR) · audio — extrait/transcrit et versé dans le dossier, hors-ligne.</div><div style="margin-top:8px;font-size:12px;color:var(--fit-sage)">${esc(S.dossierUploadMsg || "")}</div></div></div>
     ${searchWin(d)}
     ${win("Sources du dossier (" + srcs.length + ")", list)}
-    ${srcs.length ? `<div style="max-width:900px;margin-top:14px;display:flex;gap:10px;flex-wrap:wrap;align-items:center"><button class="actbtn" onclick="indice.analyzeDossier()">\u26a1 ANALYSER LE DOSSIER (avant / maintenant)</button><button class="actbtn" onclick="indice.exportDossier('md')">\u2b07 EXPORT MD</button><button class="actbtn" onclick="indice.exportDossier('pdf')">\u2b07 EXPORT PDF</button>${S.exportError ? `<span style="color:#e5534b;font-size:11px">${esc(S.exportError)}</span>` : ""}</div>` : ""}
+    ${srcs.length ? `<div style="max-width:900px;margin-top:14px;display:flex;gap:10px;flex-wrap:wrap;align-items:center"><button class="actbtn" onclick="indice.openGraph()">VUE D'ENQUÊTE (graphe)</button><button class="actbtn" onclick="indice.analyzeDossier()">\u26a1 ANALYSER LE DOSSIER (avant / maintenant)</button><button class="actbtn" onclick="indice.exportDossier('md')">\u2b07 EXPORT MD</button><button class="actbtn" onclick="indice.exportDossier('pdf')">\u2b07 EXPORT PDF</button>${S.exportError ? `<span style="color:#e5534b;font-size:11px">${esc(S.exportError)}</span>` : ""}</div>` : ""}
     ${analysisBlock()}</div>`;
     }
     function viewArchive() {
@@ -955,8 +1041,12 @@
       setQuery: (v) => { S.query = v; if (S.screen === "archive") render(); },
       setDossierNew: (v) => { S.dossierNew = v; },
       createDossier: async () => { const n = (S.dossierNew || "").trim(); if (!n) return; try { await api("/api/dossiers", { method: "POST", json: { name: n } }); S.dossierNew = ""; await loadDossiers(); } catch (e) { } },
-      openDossier: async (id) => { S.searchQ = ""; S.searchResults = []; S.searchChecked = new Set(); S.searchError = null; S.searchBusy = false; S.dossierAnalysis = null; S.exportError = null; S.juxFilter = "all"; S.dossierUploadMsg = ""; try { const d = await api("/api/dossier/" + id); S.dossierId = id; S.dossierData = d; render(); } catch (e) { } },
-      closeDossier: () => { S.dossierId = null; S.dossierData = null; S.searchResults = []; S.searchChecked = new Set(); S.searchQ = ""; S.dossierAnalysis = null; S.exportError = null; S.juxFilter = "all"; S.dossierUploadMsg = ""; render(); loadDossiers(); },
+      openDossier: async (id) => { S.searchQ = ""; S.searchResults = []; S.searchChecked = new Set(); S.searchError = null; S.searchBusy = false; S.dossierAnalysis = null; S.exportError = null; S.juxFilter = "all"; S.dossierUploadMsg = ""; S.graphView = false; S.graphData = null; try { const d = await api("/api/dossier/" + id); S.dossierId = id; S.dossierData = d; render(); } catch (e) { } },
+      openGraph: async () => { if (!S.dossierId) return; S.graphView = true; S.graphData = null; S.graphLayout = "relations"; S.graphCatFilter = "all"; render(); try { const g = await api("/api/dossier/" + S.dossierId + "/graph"); S.graphData = g; } catch (e) { S.graphData = { nodes: [], edges: [], events: [], counts: {} }; } render(); },
+      closeGraph: () => { S.graphView = false; S.graphData = null; if (CY) { try { CY.destroy(); } catch (e) { } CY = null; } render(); },
+      setGraphLayout: (l) => { S.graphLayout = l; S.graphCatFilter = "all"; render(); },
+      setGraphCat: (c) => { S.graphCatFilter = c; render(); },
+      closeDossier: () => { S.dossierId = null; S.dossierData = null; S.searchResults = []; S.searchChecked = new Set(); S.searchQ = ""; S.dossierAnalysis = null; S.exportError = null; S.juxFilter = "all"; S.dossierUploadMsg = ""; S.graphView = false; S.graphData = null; if (CY) { try { CY.destroy(); } catch (e) { } CY = null; } render(); loadDossiers(); },
       winMin: (k) => { const key = decodeURIComponent(k); if (S.winMin.has(key)) S.winMin.delete(key); else S.winMin.add(key); render(); },
       winMax: (k) => { const key = decodeURIComponent(k); S.winMax = (S.winMax === key ? null : key); render(); },
       winClose: (k) => { const key = decodeURIComponent(k); S.winClosed.add(key); render(); },
