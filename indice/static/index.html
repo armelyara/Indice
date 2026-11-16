@@ -4,7 +4,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Indice — Poste d'analyse</title>
+  <title>Indice</title>
   <link rel="icon" type="image/png" href="/static/indice_logo.png">
   <style>
     :root {
@@ -376,12 +376,12 @@
       about: {
         title: "À propos",
         html: `<p><strong style="color:var(--fit-green)">Indice</strong></p>
-<p>« Les murs ont des oreilles. » Indice est un outil d'aide à l'investigation qui rassemble des sources (texte, audio, images), en extrait les éléments d'intérêt, les corrèle et les aligne dans le temps pour monter un dossier traçable.</p>
+<p>Indice transcrit un audio et traite du texte pour relier automatiquement les mots clés d'intérêt. En d'autres termes, il rassemble des sources (texte, audio), en extrait les éléments d'intérêt, les corrèle et les aligne dans le temps pour monter un dossier traçable.</p>
 <div ${_SH}>Principe</div>
-<p>Hors-ligne et déterministe par défaut : l'outil organise et trace les éléments extraits, il n'émet aucun jugement. Les conclusions appartiennent à l'analyste.</p>
+<p>Indice est hors-ligne par défaut. L'outil organise et trace les éléments extraits, il n'émet aucun jugement. Les conclusions appartiennent à l'analyste.</p>
 <div ${_SH}>Éditeur</div>
 <p>Développé par The Day Info. Logiciel libre sous licence Apache-2.0.</p>
-<p ${_FT}>Dernière mise à jour : 12 novembre 2026.</p>`
+<p ${_FT}>Dernière mise à jour : 16 novembre 2026.</p>`
       },
       privacy: {
         title: "Politique de confidentialité",
@@ -404,12 +404,12 @@
 <div ${_SH}>Fourni « en l'état »</div>
 <p>Le logiciel est fourni sans garantie d'aucune sorte, dans les limites permises par la loi, conformément à la licence Apache-2.0.</p>
 <div ${_SH}>Usage licite</div>
-<p>Vous êtes seul responsable de l'usage que vous faites de Indice. Il est destiné à des investigations et à un travail journalistique légitimes. Ne l'utilisez pas pour surveiller illégalement, harceler ou porter atteinte aux droits d'autrui.</p>
+<p>Vous êtes seul responsable de l'usage que vous faites de Indice. Il est destiné à des investigations et à un travail de recherche et d'investigation légitimes. Ne l'utilisez pas pour surveiller illégalement, harceler ou porter atteinte aux droits d'autrui.</p>
 <div ${_SH}>Ce n'est pas un verdict</div>
 <p>Indice rassemble, extrait et aligne des éléments tracés à leur source ; il n'établit pas la vérité et ne rend aucun jugement. Les conclusions vous appartiennent et doivent être vérifiées. Indice ne fournit pas de conseil juridique.</p>
 <div ${_SH}>Données</div>
 <p>Le traitement des données est décrit dans la Politique de confidentialité.</p>
-<p ${_FT}>Dernière mise à jour : 12 novembre 2026.</p>`
+<p ${_FT}>Dernière mise à jour : 16 novembre 2026.</p>`
       }
     };
     function docScreen(key) {
@@ -445,7 +445,6 @@
       <div style="display:flex;align-items:center;gap:14px">
         <img src="/static/indice_logo.png" alt="Indice" style="height:30px;width:auto;display:block"/>
         <span style="font-size:16px;letter-spacing:.34em;color:var(--fit-green);text-shadow:0 0 10px var(--fit-green-glow);font-weight:700">INDICE</span>
-        <span style="font-size:10px;letter-spacing:.2em;color:var(--fit-sage)">POSTE D'ANALYSE · RESTRICTED</span>
       </div>
       <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">
         <span id="clock" style="font-size:11px;color:var(--fit-text-muted);letter-spacing:.1em">${esc(S.clock)}</span>
@@ -462,7 +461,7 @@
       <nav style="width:208px;border-right:1px solid var(--fit-border);background:var(--fit-surface-3);display:flex;flex-direction:column;padding:16px 0;min-height:0">
         <div style="font-size:10px;letter-spacing:.24em;color:var(--fit-text-faint);padding:0 18px 12px">NAVIGATION</div>
         ${nav}
-        <div style="margin-top:auto;padding:14px 18px;border-top:1px solid var(--fit-border);font-size:10px;letter-spacing:.1em;color:var(--fit-text-faint);line-height:1.7">OPÉRATEUR<br><span style="color:var(--fit-sage)">${esc(S.opId)}</span><br>HORS-LIGNE<div style="margin-top:12px;display:flex;flex-direction:column;gap:4px;letter-spacing:.06em"><span onclick="indice.openDoc('about')" style="cursor:pointer">À propos</span><span onclick="indice.openDoc('privacy')" style="cursor:pointer">Confidentialité</span><span onclick="indice.openDoc('terms')" style="cursor:pointer">Conditions</span></div></div>
+        <div style="margin-top:auto;padding:14px 18px;border-top:1px solid var(--fit-border);font-size:10px;letter-spacing:.1em;color:var(--fit-text-faint);line-height:1.7"><span style="color:var(--fit-sage)">${esc(S.opId)}</span><div style="margin-top:12px;display:flex;flex-direction:column;gap:4px;letter-spacing:.06em"><span onclick="indice.openDoc('about')" style="cursor:pointer">À propos</span><span onclick="indice.openDoc('privacy')" style="cursor:pointer">Confidentialité</span><span onclick="indice.openDoc('terms')" style="cursor:pointer">Conditions</span></div></div>
       </nav>
       <main style="min-height:0;min-width:0;overflow:auto;position:relative">${main}</main>
     </div>
