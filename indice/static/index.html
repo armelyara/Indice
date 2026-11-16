@@ -290,7 +290,8 @@
       border-color: var(--fit-green-dim);
       color: var(--fit-green)
     }
-  </style>
+  @keyframes fit-spin{to{transform:rotate(360deg)}}
+</style>
 </head>
 
 <body>
@@ -731,6 +732,7 @@
   </div>`;
     }
     let CY = null;
+    let PROV_T = null;
     const SORTS = [["relation", "Relation"], ["date", "Date"], ["location", "Localisation"], ["entity", "Entité"]];
     function srcTypes(g) { const set = []; (g.nodes || []).forEach(n => { if (n.kind === "source" && set.indexOf(n.category) < 0) set.push(n.category); }); return set.sort(); }
     function graphCatColor(cat) { const m = { PERSON: "#78a890", PER: "#78a890", ORG: "#d8b24a", LOC: "#5aa9e6", LOCATION: "#5aa9e6", GPE: "#5aa9e6", MONEY: "#38ef7d", DATE: "#8a9a92" }; return m[(cat || "").toUpperCase()] || "#2a3a33"; }
@@ -764,7 +766,7 @@
       if (!srcs.length) return `<div style="color:var(--fit-text-faint)">Aucune source.</div>`;
       return srcs.map(s => `<div style="padding:8px 0;border-bottom:1px solid var(--fit-grid-line)"><div style="color:var(--fit-text)">${esc(s.label)}</div><div style="color:var(--fit-text-faint);font-size:10px;margin-top:2px">${esc(s.date || "")} · ${esc(s.category || "")} ${s.url ? `· <a href="${esc(safeUrl(s.url))}" target="_blank" rel="noopener" style="color:var(--fit-sage)">ouvrir ↗</a>` : ""}</div></div>`).join("");
     }
-    function showProv(data) {
+    function renderProvDetail(data) {
       const g = S.graphData || {}; const M = srcMap();
       if (data.kind === "entity") {
         const node = (g.nodes || []).find(n => n.id === data.id) || {};
@@ -774,42 +776,63 @@
         const e = (g.edges || []).find(x => x.id === data.id) || {};
         const srcs = (e.provenance || []).map(sid => M["s:" + sid]).filter(Boolean);
         setProvHtml(`<div style="color:var(--fit-green);font-weight:700;font-size:13px;margin-bottom:2px">${esc((data.source || "").slice(2))} ↔ ${esc((data.target || "").slice(2))}</div><div style="color:var(--fit-text-faint);font-size:10px;margin-bottom:10px">co-mentionnés dans ${srcs.length} source(s)</div>` + provSrcList(srcs));
-      } else if (data.kind === "event") {
-        const s = M["s:" + data.source_id] || {};
-        setProvHtml(`<div style="color:var(--fit-green);font-weight:700;font-size:13px;margin-bottom:2px">${esc(s.label || data.label || "")}</div><div style="color:var(--fit-text-faint);font-size:10px;margin-bottom:10px">${esc(data.date || "")} · ${esc(data.category || "")} ${orientBadge(data.orientation)}</div>` + (s.url ? `<a href="${esc(safeUrl(s.url))}" target="_blank" rel="noopener" style="color:var(--fit-sage);font-size:11px">Ouvrir la source ↗</a>` : "") + (s.entities && s.entities.length ? `<div style="margin-top:10px;color:var(--fit-text-faint);font-size:10px">Entités : ${esc(s.entities.join(", "))}</div>` : ""));
+      } else if (data.kind === "source") {
+        const s = M[data.id] || M["s:" + (data.source_id || "")] || {};
+        setProvHtml(`<div style="color:var(--fit-green);font-weight:700;font-size:13px;margin-bottom:2px">${esc(s.label || data.label || "")}</div><div style="color:var(--fit-text-faint);font-size:10px;margin-bottom:10px">${esc(data.date || s.date || "")} · ${esc(data.category || s.category || "")} ${orientBadge(data.orientation || s.orientation)}</div>` + ((s.url) ? `<a href="${esc(safeUrl(s.url))}" target="_blank" rel="noopener" style="color:var(--fit-sage);font-size:11px">Ouvrir la source ↗</a>` : "") + (s.entities && s.entities.length ? `<div style="margin-top:10px;color:var(--fit-text-faint);font-size:10px">Entités : ${esc(s.entities.join(", "))}</div>` : ""));
       }
+    }
+    function showProv(data) {
+      if (PROV_T) { clearTimeout(PROV_T); PROV_T = null; }
+      setProvHtml(`<div style="display:flex;align-items:center;gap:8px;color:var(--fit-sage)"><span style="width:14px;height:14px;border:2px solid var(--fit-green-dim);border-top-color:var(--fit-green);border-radius:50%;display:inline-block;animation:fit-spin .7s linear infinite"></span> Chargement…</div>`);
+      PROV_T = setTimeout(() => { renderProvDetail(data); }, 360);
+    }
+    function GSTYLE() {
+      return [
+        { selector: "node", style: { "background-color": "data(color)", "label": "data(label)", "color": "#cfe0d8", "font-size": "10px", "text-wrap": "wrap", "text-max-width": "150px", "text-valign": "bottom", "text-margin-y": 4, "width": "mapData(count,0,20,18,48)", "height": "mapData(count,0,20,18,48)", "border-width": 1, "border-color": "#3c5248" } },
+        { selector: "node[?sel]", style: { "border-color": "#38ef7d", "border-width": 2 } },
+        { selector: 'node[kind="source"]', style: { "shape": "round-rectangle", "width": 14, "height": 14, "background-color": "#1f2d28", "border-color": "#5aa9e6", "text-valign": "center", "text-halign": "right", "text-margin-x": 7 } },
+        { selector: 'edge[kind="cooccur"]', style: { "curve-style": "bezier", "line-color": "#2f4138", "width": "mapData(weight,1,6,1,5)", "opacity": 0.7 } },
+        { selector: 'edge[kind="mention"]', style: { "curve-style": "taxi", "taxi-direction": "horizontal", "taxi-turn": "50%", "line-color": "#3a4f45", "width": 1, "opacity": 0.85 } },
+        { selector: ":selected", style: { "border-color": "#38ef7d", "border-width": 3, "line-color": "#38ef7d" } }
+      ];
+    }
+    function graphElements() {
+      const g = S.graphData, sf = S.srcFilter || "all";
+      const allowId = {}; (g.nodes || []).forEach(n => { if (n.kind === "source" && (sf === "all" || n.category === sf)) allowId[n.id.slice(2)] = 1; });
+      if (S.graphSort === "date") {
+        const ents = (g.nodes || []).filter(n => n.kind === "entity" && (n.sources || []).some(s => allowId[s]));
+        const srcs = (g.nodes || []).filter(n => n.kind === "source" && allowId[n.id.slice(2)] && n.date).slice().sort((a, b) => (a.date || "").localeCompare(b.date || ""));
+        const elements = [], pos = {}, gap = 68;
+        ents.forEach((n, i) => { elements.push({ data: { id: n.id, label: n.label, kind: "entity", count: n.count || 1, sel: !!n.is_selector, color: "#2a3a33" } }); pos[n.id] = { x: 0, y: i * gap }; });
+        srcs.forEach((n, i) => { elements.push({ data: { id: n.id, label: (n.date || "?") + "   " + n.label, kind: "source", category: n.category, source_id: n.id.slice(2), url: n.url, orientation: n.orientation, date: n.date, count: 6, color: "#1f2d28" } }); pos[n.id] = { x: 360, y: i * gap }; });
+        const idset = {}; elements.forEach(e => idset[e.data.id] = 1);
+        (g.edges || []).filter(e => e.kind === "mention" && idset[e.source] && idset[e.target]).forEach(e => elements.push({ data: { id: e.id, source: e.source, target: e.target, kind: "mention", weight: 1 } }));
+        return { elements, layout: { name: "preset", positions: (n) => pos[n.id()] || { x: 0, y: 0 }, animate: true, animationDuration: 650, animationEasing: "ease-in-out-cubic", fit: true, padding: 55 } };
+      }
+      let ents = (g.nodes || []).filter(n => n.kind === "entity").filter(n => (n.sources || []).some(s => allowId[s]));
+      if (S.graphSort === "location") ents = ents.filter(n => isLoc(n.category));
+      const byColor = (S.graphSort === "entity");
+      const elements = [], idset = {};
+      ents.forEach(n => { elements.push({ data: { id: n.id, label: n.label, kind: "entity", cat: n.category, count: n.count || 1, sel: !!n.is_selector, color: byColor ? graphCatColor(n.category) : "#2a3a33" } }); idset[n.id] = 1; });
+      (g.edges || []).filter(e => e.kind === "cooccur" && idset[e.source] && idset[e.target]).forEach(e => elements.push({ data: { id: e.id, source: e.source, target: e.target, kind: "cooccur", weight: e.weight || 1 } }));
+      return { elements, layout: { name: "concentric", concentric: n => n.data("count") || 1, levelWidth: () => 4, minNodeSpacing: 34, animate: true, animationDuration: 650, animationEasing: "ease-in-out-cubic" } };
+    }
+    function applyGraph(elements, layout) {
+      const want = {}; elements.forEach(e => want[e.data.id] = e);
+      CY.batch(() => {
+        CY.elements().forEach(el => { if (!want[el.id()]) el.remove(); });
+        elements.forEach(e => { if (CY.getElementById(e.data.id).empty()) CY.add(e); });
+      });
+      CY.layout(layout).run();
     }
     function graphMount() {
       const el = document.getElementById("cy"); const g = S.graphData;
       if (!el || !g || typeof cytoscape === "undefined") return;
-      const sf = S.srcFilter || "all";
-      const allowId = {}; (g.nodes || []).forEach(n => { if (n.kind === "source" && (sf === "all" || n.category === sf)) allowId[n.id.slice(2)] = 1; });
-      let elements = [], layout; const byColor = (S.graphSort === "entity");
-      if (S.graphSort === "date") {
-        const evs = (g.events || []).filter(e => sf === "all" || e.category === sf).slice().sort((a, b) => (a.date || "").localeCompare(b.date || ""));
-        const W = Math.max(1, evs.length - 1), spanW = Math.max(600, evs.length * 120);
-        evs.forEach((e, i) => elements.push({ data: { id: e.id, label: (e.date || "?") + " · " + e.label, kind: "event", category: e.category, count: 1, source_id: e.source_id, url: e.url, orientation: e.orientation, date: e.date, color: "#1f2d28" }, position: { x: (evs.length > 1 ? i / W : 0) * spanW, y: (i % 2 === 0 ? 0 : 90) } }));
-        layout = { name: "preset", animate: true, animationDuration: 450, fit: true, padding: 45 };
-      } else {
-        let ents = (g.nodes || []).filter(n => n.kind === "entity").filter(n => (n.sources || []).some(sid => allowId[sid]));
-        if (S.graphSort === "location") ents = ents.filter(n => isLoc(n.category));
-        const ids = {}; ents.forEach(n => ids[n.id] = 1);
-        ents.forEach(n => elements.push({ data: { id: n.id, label: n.label, kind: "entity", cat: n.category, count: n.count || 1, sel: !!n.is_selector, color: byColor ? graphCatColor(n.category) : "#2a3a33" } }));
-        (g.edges || []).filter(e => e.kind === "cooccur" && ids[e.source] && ids[e.target]).forEach(e => elements.push({ data: { id: e.id, source: e.source, target: e.target, kind: "cooccur", weight: e.weight || 1 } }));
-        layout = { name: "concentric", concentric: n => n.data("count") || 1, levelWidth: () => 4, minNodeSpacing: 32, animate: true, animationDuration: 450 };
+      const ge = graphElements();
+      if (CY) {
+        try { CY.mount(el); applyGraph(ge.elements, ge.layout); return; } catch (e) { try { CY.destroy(); } catch (_e) { } CY = null; }
       }
-      if (CY) { try { CY.destroy(); } catch (e) { } CY = null; }
-      CY = cytoscape({
-        container: el, elements: elements, wheelSensitivity: 0.2, minZoom: 0.2, maxZoom: 3,
-        style: [
-          { selector: "node", style: { "background-color": "data(color)", "label": "data(label)", "color": "#cfe0d8", "font-size": "10px", "text-wrap": "wrap", "text-max-width": "130px", "text-valign": "bottom", "text-margin-y": 4, "width": "mapData(count,0,20,18,48)", "height": "mapData(count,0,20,18,48)", "border-width": 1, "border-color": "#3c5248" } },
-          { selector: "node[?sel]", style: { "border-color": "#38ef7d", "border-width": 2 } },
-          { selector: 'node[kind="event"]', style: { "shape": "round-rectangle", "width": 16, "height": 16, "border-color": "#5aa9e6" } },
-          { selector: "edge", style: { "line-color": "#2f4138", "width": "mapData(weight,1,6,1,5)", "curve-style": "haystack", "opacity": 0.7 } },
-          { selector: ":selected", style: { "border-color": "#38ef7d", "border-width": 3, "line-color": "#38ef7d" } }
-        ],
-        layout: layout
-      });
+      CY = cytoscape({ container: el, elements: ge.elements, wheelSensitivity: 0.2, minZoom: 0.2, maxZoom: 3, style: GSTYLE(), layout: ge.layout });
       CY.on("tap", "node", evt => showProv(evt.target.data()));
       CY.on("tap", "edge", evt => showProv(evt.target.data()));
       CY.on("tap", evt => { if (evt.target === CY) setProvHtml(""); });
