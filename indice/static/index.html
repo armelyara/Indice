@@ -753,7 +753,7 @@
       <div id="gcanvas" style="position:absolute;inset:0;z-index:10"></div>
       ${hud}
       ${rail}
-      <div id="gdrawer" style="position:absolute;z-index:40;display:none;max-height:52%;overflow-y:auto;background:rgba(14,20,26,.96);border:1px solid rgba(255,255,255,.22);backdrop-filter:blur(8px);box-shadow:0 10px 30px rgba(0,0,0,.6)"></div>
+      <div id="gsheet" style="position:absolute;top:0;right:0;bottom:0;width:340px;max-width:92%;z-index:50;display:none;overflow-y:auto;background:rgba(12,18,23,.97);border-left:1px solid rgba(255,255,255,.22);backdrop-filter:blur(10px);box-shadow:-10px 0 30px rgba(0,0,0,.6)"></div>
     </div></div>`;
     }
     function gModel() {
@@ -850,22 +850,45 @@
       GV.pos = pos;
       if (animate) gAnimateLines(720); else requestAnimationFrame(gDrawLines);
     }
-    function gSelect(id) {
+    function gEntityLabel(eid) { const n = ((S.graphData || {}).nodes || []).find(x => x.id === eid); return n ? n.label : (eid || "").slice(2); }
+    async function gSelect(id) {
       if (!GV) return; const m = GV.model;
       if (id === m.subject.id) { gCloseDrawer(); return; }
       const node = (m.ents || []).find(e => e.id === id); if (!node) { gCloseDrawer(); return; }
-      const srcs = (node.sources || []).map(sid => m.srcById[sid]).filter(Boolean);
-      const body = srcs.length ? srcs.map(sx => `<div style="padding:8px 0;border-bottom:1px solid rgba(255,255,255,.08)"><div style="color:var(--fit-green);font-size:11px">${esc(gShort(sx.label || sx.url || ""))} <span style="color:var(--fit-text-faint)">· ${esc(sx.date || "")} · ${esc(sx.category || "")}</span></div>${sx.excerpt ? `<div style="color:var(--fit-text-muted);font-size:10px;line-height:1.5;margin-top:3px">${esc(sx.excerpt)}</div>` : ""}${sx.url ? `<a href="${esc(safeUrl(sx.url))}" target="_blank" rel="noopener" style="color:var(--fit-sage);font-size:10px;word-break:break-all;display:block;margin-top:3px">${esc(sx.url)}</a>` : ""}</div>`).join("") : `<div style="color:var(--fit-text-faint);font-size:11px">Aucune source.</div>`;
-      GV.drawer.innerHTML = `<div style="padding:10px 12px"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px"><span style="color:var(--fit-green);font-weight:700;font-size:12px">${esc(node.label)}</span><span onclick="indice.closeDrawer()" style="cursor:pointer;color:var(--fit-text-faint)">✕</span></div><div style="color:var(--fit-text-faint);font-size:9px;letter-spacing:.08em;margin-bottom:8px">${esc(node.category || "")} · ${node.count || 0} mentions · ${srcs.length} source(s)</div>${body}</div>`;
-      GV.drawer.style.display = "block";
-      const cc = GV.cards[id]; const wr = GV.wrap.getBoundingClientRect(), r = cc.getBoundingClientRect();
-      const dw = 300; let left = r.left - wr.left, top = r.bottom - wr.top + 6;
-      left = Math.max(8, Math.min(left, GV.wrap.clientWidth - dw - 8));
-      top = Math.max(8, Math.min(top, GV.wrap.clientHeight - 60));
-      GV.drawer.style.left = left + "px"; GV.drawer.style.top = top + "px"; GV.drawer.style.width = dw + "px";
       GV.sel = id;
+      const srcs = (node.sources || []).map(sid => m.srcById[sid]).filter(Boolean).slice().sort((a, b) => (a.date || "9999").localeCompare(b.date || "9999"));
+      const chrono = srcs.length ? srcs.map(sx => `<div style="padding:9px 0;border-bottom:1px solid rgba(255,255,255,.08)"><div style="display:flex;gap:8px;align-items:baseline"><span style="color:var(--fit-sage);font-size:10px;min-width:74px">${esc(sx.date || "—")}</span><span style="color:var(--fit-green);font-size:11px;font-weight:600;word-break:break-word">${esc(gShort(sx.label || sx.url || ""))}</span><span style="color:var(--fit-text-faint);font-size:9px">${esc(sx.category || "")}</span></div>${sx.excerpt ? `<div style="color:var(--fit-text-muted);font-size:10px;line-height:1.5;margin:4px 0 0 82px">${esc(sx.excerpt)}</div>` : ""}${sx.url ? `<a href="${esc(safeUrl(sx.url))}" target="_blank" rel="noopener" style="color:var(--fit-sage);font-size:9px;word-break:break-all;display:block;margin:3px 0 0 82px">${esc(sx.url)}</a>` : ""}</div>`).join("") : `<div style="color:var(--fit-text-faint);font-size:11px">Aucune source.</div>`;
+      const links = (m.cooc || []).filter(pp => pp[0] === id || pp[1] === id).map(pp => { const other = pp[0] === id ? pp[1] : pp[0]; return { label: gEntityLabel(other), w: pp[2] }; }).sort((a, b) => b.w - a.w);
+      const linksHtml = links.length ? links.map(x => `<span style="display:inline-block;font-size:10px;padding:3px 8px;margin:0 5px 5px 0;border:1px solid var(--fit-green-dim);color:var(--fit-green);background:var(--fit-surface-2)">${esc(x.label)} <span style="color:var(--fit-text-faint)">${x.w}</span></span>`).join("") : `<span style="color:var(--fit-text-faint);font-size:10px">—</span>`;
+      const first = srcs.length ? srcs[0].date : "", last = srcs.length ? srcs[srcs.length - 1].date : "";
+      const span = first ? (esc(first) + (last && last !== first ? " → " + esc(last) : "")) : "";
+      GV.sheet.innerHTML = `<div style="padding:16px 16px 22px">
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px"><div><div style="color:var(--fit-green);font-weight:700;font-size:16px;letter-spacing:.04em;word-break:break-word">${esc(node.label)}</div><div style="color:var(--fit-text-faint);font-size:9px;letter-spacing:.1em;margin-top:2px">${esc(node.category || "ENTITÉ")} · ${node.count || 0} MENTIONS · ${srcs.length} SOURCE(S)${span ? " · " + span : ""}</div></div><span onclick="indice.closeDrawer()" style="cursor:pointer;color:var(--fit-text-faint);font-size:14px">✕</span></div>
+    <div id="xref-banner" style="margin-top:12px;font-size:10px;color:var(--fit-text-faint)">Vérification inter-dossiers…</div>
+    <div style="margin-top:16px;font-size:9px;letter-spacing:.18em;color:var(--fit-sage)">LIÉ À</div>
+    <div style="margin-top:8px">${linksHtml}</div>
+    <div style="margin-top:18px;font-size:9px;letter-spacing:.18em;color:var(--fit-sage)">CHRONOLOGIE</div>
+    <div style="margin-top:6px">${chrono}</div>
+  </div>`;
+      GV.sheet.scrollTop = 0; GV.sheet.style.display = "block";
+      try {
+        const r = await api("/api/entity-xref?name=" + encodeURIComponent(node.label));
+        if (!GV || GV.sel !== id) return;
+        const list = (r && r.dossiers) || [];
+        const el = document.getElementById("xref-banner"); if (!el) return;
+        if (list.length >= 2) {
+          const names = list.map(x => esc(x.name || x.dossier_id)).join(", ");
+          el.style.cssText = "margin-top:12px;font-size:11px;color:#fff;background:#8a1f1f;border:1px solid #c0392b;padding:8px 10px;letter-spacing:.03em;line-height:1.4";
+          el.innerHTML = `⚠ Présente dans ${list.length} dossiers : ${names}`;
+        } else {
+          el.style.cssText = "margin-top:12px;font-size:10px;color:var(--fit-text-faint)";
+          el.textContent = "Présente uniquement dans ce dossier.";
+        }
+      } catch (e) {
+        const el = document.getElementById("xref-banner"); if (el) { el.style.cssText = "margin-top:12px;font-size:10px;color:var(--fit-text-faint)"; el.textContent = "Croisement inter-dossiers indisponible."; }
+      }
     }
-    function gCloseDrawer() { if (GV && GV.drawer) { GV.drawer.style.display = "none"; GV.sel = null; } }
+    function gCloseDrawer() { if (GV && GV.sheet) { GV.sheet.style.display = "none"; GV.sel = null; } }
     function gSetSort(k) {
       S.graphSort = k; gCloseDrawer();
       const hud = document.getElementById("ghud");
@@ -893,8 +916,9 @@
       const wrap = document.getElementById("gwrap");
       if (!wrap || !S.graphData || !S.dossierData) return;
       if (GV && GV.wrap === wrap) { gLayout(false); return; }
-      GV = { wrap: wrap, canvas: document.getElementById("gcanvas"), svg: document.getElementById("glines"), drawer: document.getElementById("gdrawer"), dname: (S.dossierData.name || ""), cards: {}, sel: null, raf: 0 };
+      GV = { wrap: wrap, canvas: document.getElementById("gcanvas"), svg: document.getElementById("glines"), sheet: document.getElementById("gsheet"), dname: (S.dossierData.name || ""), cards: {}, sel: null, raf: 0 };
       wrap.addEventListener("click", () => gCloseDrawer());
+      if (GV.sheet) GV.sheet.addEventListener("click", (e) => e.stopPropagation());
       window.addEventListener("resize", gOnResize);
       gRebuildCards();
       gLayout(false);

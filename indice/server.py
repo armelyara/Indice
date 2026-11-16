@@ -243,6 +243,26 @@ async def dossier_graph_ep(dossier_id: str, selectors: Optional[str] = Query(Non
     return dossier_analyze.build_graph(d, selectors or "")
 
 
+@app.get("/api/entity-xref")
+async def entity_xref_ep(name: str = Query(...), _: str = Depends(require_auth)):
+    # Scan every dossier for this entity name; used for the cross-dossier alert banner.
+    nl = (name or "").strip().lower()
+    hits = []
+    if nl:
+        for meta in dossiers.list_dossiers():
+            d = dossiers.get_dossier(meta.get("id"))
+            if not d:
+                continue
+            c = 0
+            for src in d.get("sources", []):
+                t = (src.get("raw_text") or "").lower()
+                if nl in t:
+                    c += t.count(nl)
+            if c > 0:
+                hits.append({"dossier_id": d.get("id"), "name": d.get("name"), "count": c})
+    return {"name": name, "dossiers": hits}
+
+
 @app.post("/api/dossier/{dossier_id}/source/{source_id}/orientation")
 async def set_source_orientation_ep(dossier_id: str, source_id: str, body: OrientationBody,
                                     _: str = Depends(require_auth)):
