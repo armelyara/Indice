@@ -502,18 +502,18 @@
       const matrix = `<div id="matrix" style="display:grid;grid-template-columns:1fr 1fr;max-height:300px;overflow:auto"></div>`;
       const summary = `<div id="summary" style="padding:14px 16px"></div>`;
       const analyzer = `<div id="analyzer" style="padding:13px 16px;display:flex;flex-direction:column;gap:10px"></div>`;
-      return `<div id="ingest" style="position:relative;min-height:100%;padding:22px 28px">
+      return `<div id="ingest" style="position:relative;height:100%;padding:22px 28px;display:flex;flex-direction:column;box-sizing:border-box">
     <svg id="arrow-layer" style="position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:30;overflow:visible"></svg>
-    <div style="display:grid;grid-template-columns:1.35fr 1fr;gap:0">
+    <div style="display:grid;grid-template-columns:1.35fr 1fr;gap:0;flex:1;min-height:0">
       <div style="padding-right:28px;border-right:1px solid var(--fit-border);display:flex;flex-direction:column;gap:11px;min-height:0">
         <div style="display:flex;justify-content:space-between;align-items:center">
           <span style="font-size:11px;letter-spacing:.2em;color:var(--fit-sage)">TRANSCRIPTION EN DIRECT</span>
           <span id="lc" style="font-size:10px;color:var(--fit-text-faint)"></span>
         </div>
-        <div id="transcript" style="display:flex;flex-direction:column;gap:11px"></div>
+        <div id="transcript" style="display:flex;flex-direction:column;gap:11px;flex:1;min-height:0;overflow-y:auto"></div>
         <div id="flux-cta"></div>
       </div>
-      <div style="padding-left:24px;display:flex;flex-direction:column;gap:16px">
+      <div style="padding-left:24px;display:flex;flex-direction:column;gap:16px;overflow-y:auto;min-height:0">
         ${win("Matrice de corrélation", matrix)}
         ${win("Summary", summary)}
         ${win("Analyseur", analyzer)}

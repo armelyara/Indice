@@ -1,5 +1,5 @@
 """
-auth.py — token authentication for the Indice access gate.
+auth.py — token authentication for Indice access gate.
 
 One operator credential. The passphrase comes from the INDICE_PASSPHRASE env var when
 set, otherwise from config.json. It is verified with a salted PBKDF2-HMAC-SHA256 hash
