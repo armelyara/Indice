@@ -119,6 +119,7 @@ def build_graph(dossier: Dict[str, Any], extra_selectors: str = "") -> Dict[str,
             "date": src.get("published_date") or "",
             "orientation": src.get("orientation") or "unknown",
             "url": src.get("url") or "",
+            "excerpt": (src.get("raw_text") or "").strip()[:220],
             "entities": present,
         })
         if src.get("published_date"):

@@ -6,7 +6,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Indice</title>
   <link rel="icon" type="image/png" href="/static/indice_logo.png">
-  <script src="/static/cytoscape.min.js"></script>
   <style>
     :root {
       --mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
@@ -731,111 +730,164 @@
     ${win("Entit\u00e9s extraites", `<div style="padding:14px 16px;display:flex;flex-wrap:wrap;gap:8px">${ents}</div>`)}
   </div>`;
     }
-    let CY = null;
-    let PROV_T = null;
+    let GV = null;
     const SORTS = [["relation", "Relation"], ["date", "Date"], ["location", "Localisation"], ["entity", "Entité"]];
     function srcTypes(g) { const set = []; (g.nodes || []).forEach(n => { if (n.kind === "source" && set.indexOf(n.category) < 0) set.push(n.category); }); return set.sort(); }
-    function graphCatColor(cat) { const m = { PERSON: "#78a890", PER: "#78a890", ORG: "#d8b24a", LOC: "#5aa9e6", LOCATION: "#5aa9e6", GPE: "#5aa9e6", MONEY: "#38ef7d", DATE: "#8a9a92" }; return m[(cat || "").toUpperCase()] || "#2a3a33"; }
     function isLoc(cat) { const u = (cat || "").toUpperCase(); return u.indexOf("LOC") >= 0 || u === "GPE" || u.indexOf("LIEU") >= 0; }
+    function gDomain(u) { try { const m = (u || "").match(/^https?:\/\/([^\/]+)/i); if (m) return m[1].replace(/^www\./, ""); } catch (e) { } return null; }
+    function gShort(t) { const d = gDomain(t); return d ? d : (t || ""); }
     function viewGraph(d) {
       const g = S.graphData;
       const back = `<button class="actbtn" onclick="indice.closeGraph()">← DOSSIER</button>`;
       if (!g) return `<div style="height:100%;display:flex;flex-direction:column;padding:26px 34px"><div style="display:flex;align-items:center;gap:14px;margin-bottom:18px">${back}<div style="font-size:20px;letter-spacing:.1em">VUE D'ENQUÊTE · ${esc(d.name)}</div></div><div style="color:var(--fit-sage);font-size:12px">Construction du graphe…</div></div>`;
       const c = g.counts || {};
-      const sortLabel = (SORTS.find(x => x[0] === S.graphSort) || SORTS[0])[1];
-      const sortItems = SORTS.map(([k, l]) => `<div onclick="indice.setSort('${k}')" style="padding:7px 14px;cursor:pointer;font-size:11px;letter-spacing:.08em;${S.graphSort === k ? "background:var(--fit-green);color:var(--fit-ink-on-green)" : "color:var(--fit-text-dim)"}">${esc(l)}</div>`).join("");
-      const sortPop = S.sortOpen ? `<div style="position:absolute;top:44px;left:14px;z-index:40;background:var(--fit-surface-3);border:1px solid var(--fit-border-strong);min-width:184px;box-shadow:0 6px 24px rgba(0,0,0,.5)"><div style="padding:8px 14px;font-size:10px;letter-spacing:.18em;color:var(--fit-sage);border-bottom:1px solid var(--fit-border)">ORGANISER PAR</div>${sortItems}</div>` : "";
+      const hudRow = (k, l) => { const on = S.graphSort === k; return `<div data-sort="${k}" onclick="indice.setSort('${k}')" style="padding:7px 13px;cursor:pointer;font-size:11px;letter-spacing:.08em;background:${on ? "var(--fit-green)" : "transparent"};color:${on ? "var(--fit-ink-on-green)" : "var(--fit-text-dim)"}">${esc(l)}</div>`; };
+      const hud = `<div id="ghud" style="position:absolute;right:120px;top:32%;z-index:30;backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);background:rgba(18,26,32,.6);border:1px solid rgba(255,255,255,.18);min-width:152px;box-shadow:0 8px 28px rgba(0,0,0,.45)"><div style="padding:7px 13px;font-size:10px;letter-spacing:.2em;color:#8fd3da;border-bottom:1px solid rgba(255,255,255,.12)">ORGANISER PAR</div>${SORTS.map(([k, l]) => hudRow(k, l)).join("")}</div>`;
       const types = srcTypes(g);
-      const railItem = (k, l) => `<div onclick="indice.setSrcFilter('${k}')" style="padding:8px 8px;cursor:pointer;font-size:10px;letter-spacing:.1em;text-align:center;border:1px solid ${S.srcFilter === k ? "var(--fit-green)" : "var(--fit-border)"};color:${S.srcFilter === k ? "var(--fit-green)" : "var(--fit-text-muted)"};background:var(--fit-surface-2)">${esc(l)}</div>`;
-      const rail = `<div style="display:flex;flex-direction:column;gap:8px;width:96px"><div style="font-size:9px;letter-spacing:.16em;color:var(--fit-text-faint);text-align:center;margin-bottom:2px">SOURCES</div>${railItem("all", "TOUT")}${types.map(t => railItem(t, (t || "src").toUpperCase())).join("")}</div>`;
+      const railItem = (k, l) => { const on = (S.srcFilter || "all") === k; return `<div data-src="${k}" onclick="indice.setSrcFilter('${k}')" style="padding:8px 6px;cursor:pointer;font-size:10px;letter-spacing:.1em;text-align:center;border:1px solid ${on ? "var(--fit-green)" : "var(--fit-border)"};color:${on ? "var(--fit-green)" : "var(--fit-text-muted)"};background:rgba(20,28,34,.5);backdrop-filter:blur(6px)">${esc(l)}</div>`; };
+      const rail = `<div id="grail" style="position:absolute;right:16px;top:16px;z-index:25;width:92px;display:flex;flex-direction:column;gap:8px"><div style="font-size:9px;letter-spacing:.16em;color:var(--fit-text-faint);text-align:center;margin-bottom:2px">SOURCES</div>${railItem("all", "TOUT")}${types.map(t => railItem(t, (t || "src").toUpperCase())).join("")}</div>`;
       return `<div style="height:100%;display:flex;flex-direction:column;background:var(--fit-surface-1);padding:14px 18px;box-sizing:border-box">
     <div style="display:flex;align-items:center;gap:14px;margin-bottom:10px;flex-wrap:wrap">${back}<div style="font-size:16px;letter-spacing:.12em;color:var(--fit-green)">${esc((d.name || "").toUpperCase())}</div><span style="color:var(--fit-text-faint);font-size:11px">${c.entities || 0} entités · ${c.sources || 0} sources · ${c.events || 0} datées</span></div>
-    <div style="flex:1;min-height:0;display:grid;grid-template-columns:1fr 96px;gap:12px">
-      <div style="position:relative;min-height:0;border:1px solid var(--fit-border);background:var(--fit-surface-2);overflow:hidden">
-        <button class="actbtn" onclick="indice.toggleSort()" style="position:absolute;top:10px;left:14px;z-index:40;font-size:10px;letter-spacing:.14em">⚙ TRIER · ${esc((sortLabel || "").toUpperCase())}</button>
-        ${sortPop}
-        <div id="cy" style="position:absolute;inset:0"></div>
-        <div id="prov-panel" style="position:absolute;left:14px;bottom:14px;z-index:35;max-width:300px;max-height:46%;overflow-y:auto;background:var(--fit-surface-3);border:1px solid var(--fit-border-strong);padding:10px 12px;font-size:11px;color:var(--fit-text-muted);display:none"></div>
-      </div>
+    <div id="gwrap" style="flex:1;min-height:0;position:relative;border:1px solid var(--fit-border);background:radial-gradient(circle at 50% 45%, #10171d, #0b1014);overflow:hidden">
+      <svg id="glines" style="position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:5"></svg>
+      <div id="gcanvas" style="position:absolute;inset:0;z-index:10"></div>
+      ${hud}
       ${rail}
+      <div id="gdrawer" style="position:absolute;z-index:40;display:none;max-height:52%;overflow-y:auto;background:rgba(14,20,26,.96);border:1px solid rgba(255,255,255,.22);backdrop-filter:blur(8px);box-shadow:0 10px 30px rgba(0,0,0,.6)"></div>
     </div></div>`;
     }
-    function srcMap() { const m = {}; ((S.graphData || {}).nodes || []).forEach(n => { if (n.kind === "source") m[n.id] = n; }); return m; }
-    function setProvHtml(h) { const el = document.getElementById("prov-panel"); if (!el) return; if (h) { el.innerHTML = h; el.style.display = "block"; } else { el.style.display = "none"; } }
-    function provSrcList(srcs) {
-      if (!srcs.length) return `<div style="color:var(--fit-text-faint)">Aucune source.</div>`;
-      return srcs.map(s => `<div style="padding:8px 0;border-bottom:1px solid var(--fit-grid-line)"><div style="color:var(--fit-text)">${esc(s.label)}</div><div style="color:var(--fit-text-faint);font-size:10px;margin-top:2px">${esc(s.date || "")} · ${esc(s.category || "")} ${s.url ? `· <a href="${esc(safeUrl(s.url))}" target="_blank" rel="noopener" style="color:var(--fit-sage)">ouvrir ↗</a>` : ""}</div></div>`).join("");
+    function gModel() {
+      const g = S.graphData || {};
+      const srcById = {}; (g.nodes || []).forEach(n => { if (n.kind === "source") srcById[n.id.slice(2)] = n; });
+      const sf = S.srcFilter || "all";
+      const allow = (sid) => { const sn = srcById[sid]; return !!sn && (sf === "all" || sn.category === sf); };
+      let ents = (g.nodes || []).filter(n => n.kind === "entity").filter(n => (n.sources || []).some(allow));
+      ents = ents.map(n => { let best = null; (n.sources || []).forEach(sid => { const sn = srcById[sid]; if (sn && sn.date) { if (!best || sn.date < best) best = sn.date; } }); return { id: n.id, label: n.label, category: n.category, count: n.count || 1, sel: !!n.is_selector, sources: (n.sources || []).filter(allow), date: best }; });
+      const subject = { id: "__subject__", label: (GV && GV.dname) || "SUJET", category: "DOSSIER" };
+      const ids = {}; ents.forEach(e => ids[e.id] = 1);
+      const cooc = (g.edges || []).filter(e => e.kind === "cooccur" && ids[e.source] && ids[e.target]).map(e => [e.source, e.target, e.weight || 1]);
+      return { subject, ents, cooc, srcById };
     }
-    function renderProvDetail(data) {
-      const g = S.graphData || {}; const M = srcMap();
-      if (data.kind === "entity") {
-        const node = (g.nodes || []).find(n => n.id === data.id) || {};
-        const srcs = (node.sources || []).map(sid => M["s:" + sid]).filter(Boolean);
-        setProvHtml(`<div style="color:var(--fit-green);font-weight:700;font-size:13px;margin-bottom:2px">${esc(node.label || "")}</div><div style="color:var(--fit-text-faint);font-size:10px;margin-bottom:10px">${esc(node.category || "")} · ${node.count || 0} mentions · ${srcs.length} source(s)</div>` + provSrcList(srcs));
-      } else if (data.kind === "cooccur") {
-        const e = (g.edges || []).find(x => x.id === data.id) || {};
-        const srcs = (e.provenance || []).map(sid => M["s:" + sid]).filter(Boolean);
-        setProvHtml(`<div style="color:var(--fit-green);font-weight:700;font-size:13px;margin-bottom:2px">${esc((data.source || "").slice(2))} ↔ ${esc((data.target || "").slice(2))}</div><div style="color:var(--fit-text-faint);font-size:10px;margin-bottom:10px">co-mentionnés dans ${srcs.length} source(s)</div>` + provSrcList(srcs));
-      } else if (data.kind === "source") {
-        const s = M[data.id] || M["s:" + (data.source_id || "")] || {};
-        setProvHtml(`<div style="color:var(--fit-green);font-weight:700;font-size:13px;margin-bottom:2px">${esc(s.label || data.label || "")}</div><div style="color:var(--fit-text-faint);font-size:10px;margin-bottom:10px">${esc(data.date || s.date || "")} · ${esc(data.category || s.category || "")} ${orientBadge(data.orientation || s.orientation)}</div>` + ((s.url) ? `<a href="${esc(safeUrl(s.url))}" target="_blank" rel="noopener" style="color:var(--fit-sage);font-size:11px">Ouvrir la source ↗</a>` : "") + (s.entities && s.entities.length ? `<div style="margin-top:10px;color:var(--fit-text-faint);font-size:10px">Entités : ${esc(s.entities.join(", "))}</div>` : ""));
+    function gRelationPos(ents, W, H) {
+      const cx = W / 2, cy = H / 2, pos = { __subject__: { x: cx, y: cy } };
+      const n = ents.length; if (!n) return pos;
+      const R = Math.max(120, Math.min(W, H) * 0.34);
+      ents.forEach((e, i) => { const a = (i / n) * Math.PI * 2; pos[e.id] = { x: cx + R * Math.cos(a), y: cy + R * Math.sin(a) }; });
+      for (let it = 0; it < 120; it++) {
+        ents.forEach((e, i) => {
+          let fx = 0, fy = 0;
+          ents.forEach((o, j) => { if (i === j) return; const dx = pos[e.id].x - pos[o.id].x, dy = pos[e.id].y - pos[o.id].y; const d2 = dx * dx + dy * dy + 0.01; const f = 5200 / d2; fx += dx * f; fy += dy * f; });
+          const dxc = pos[e.id].x - cx, dyc = pos[e.id].y - cy, dc = Math.sqrt(dxc * dxc + dyc * dyc) || 1;
+          const spring = (R - dc) * 0.02; fx += dxc / dc * spring; fy += dyc / dc * spring;
+          pos[e.id].x += Math.max(-9, Math.min(9, fx)); pos[e.id].y += Math.max(-9, Math.min(9, fy));
+          pos[e.id].x = Math.max(95, Math.min(W - 95, pos[e.id].x)); pos[e.id].y = Math.max(42, Math.min(H - 42, pos[e.id].y));
+        });
       }
+      return pos;
     }
-    function showProv(data) {
-      if (PROV_T) { clearTimeout(PROV_T); PROV_T = null; }
-      setProvHtml(`<div style="display:flex;align-items:center;gap:8px;color:var(--fit-sage)"><span style="width:14px;height:14px;border:2px solid var(--fit-green-dim);border-top-color:var(--fit-green);border-radius:50%;display:inline-block;animation:fit-spin .7s linear infinite"></span> Chargement…</div>`);
-      PROV_T = setTimeout(() => { renderProvDetail(data); }, 360);
+    function gDatePos(ents, W, H) {
+      const pos = { __subject__: { x: W * 0.18, y: H * 0.55 } };
+      const col = ents.slice().sort((a, b) => (a.date || "9999").localeCompare(b.date || "9999"));
+      const x = W * 0.42, top = 52, bottom = H - 52, n = col.length;
+      const gap = n > 1 ? Math.min(76, (bottom - top) / (n - 1)) : 0;
+      col.forEach((e, i) => { pos[e.id] = { x: x, y: n > 1 ? top + i * gap : (top + bottom) / 2 }; });
+      return pos;
     }
-    function GSTYLE() {
-      return [
-        { selector: "node", style: { "background-color": "data(color)", "label": "data(label)", "color": "#cfe0d8", "font-size": "10px", "text-wrap": "wrap", "text-max-width": "150px", "text-valign": "bottom", "text-margin-y": 4, "width": "mapData(count,0,20,18,48)", "height": "mapData(count,0,20,18,48)", "border-width": 1, "border-color": "#3c5248" } },
-        { selector: "node[?sel]", style: { "border-color": "#38ef7d", "border-width": 2 } },
-        { selector: 'node[kind="source"]', style: { "shape": "round-rectangle", "width": 14, "height": 14, "background-color": "#1f2d28", "border-color": "#5aa9e6", "text-valign": "center", "text-halign": "right", "text-margin-x": 7 } },
-        { selector: 'edge[kind="cooccur"]', style: { "curve-style": "bezier", "line-color": "#2f4138", "width": "mapData(weight,1,6,1,5)", "opacity": 0.7 } },
-        { selector: 'edge[kind="mention"]', style: { "curve-style": "taxi", "taxi-direction": "horizontal", "taxi-turn": "50%", "line-color": "#3a4f45", "width": 1, "opacity": 0.85 } },
-        { selector: ":selected", style: { "border-color": "#38ef7d", "border-width": 3, "line-color": "#38ef7d" } }
-      ];
+    function gCardInner(node, isSub) {
+      const title = esc(gShort(node.label || ""));
+      const sub = isSub ? "DOSSIER" : esc(node.category || "ENTITÉ");
+      const icon = `<span style="width:16px;height:16px;flex:0 0 16px;background:${isSub ? "var(--fit-green)" : "#243039"};border:1px solid rgba(255,255,255,.25);display:inline-block"></span>`;
+      const meta = isSub ? "" : `<span class="gmeta" style="display:none;margin-left:10px;color:var(--fit-text-faint);font-size:9px;white-space:nowrap">${esc(node.date || "—")}</span>`;
+      return `<div style="display:flex;align-items:center;gap:8px;background:#161d24;border:1px solid rgba(255,255,255,.25);padding:${isSub ? "8px 12px" : "6px 9px"};${isSub ? "min-width:150px" : "max-width:180px"}">${icon}<div style="min-width:0"><div style="font-weight:${isSub ? "700" : "600"};font-size:${isSub ? "12px" : "11px"};color:var(--fit-green);max-width:140px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${title}</div><div style="font-size:9px;letter-spacing:.08em;color:var(--fit-text-faint);max-width:140px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${sub}</div></div>${meta}</div>`;
     }
-    function graphElements() {
-      const g = S.graphData, sf = S.srcFilter || "all";
-      const allowId = {}; (g.nodes || []).forEach(n => { if (n.kind === "source" && (sf === "all" || n.category === sf)) allowId[n.id.slice(2)] = 1; });
-      if (S.graphSort === "date") {
-        const ents = (g.nodes || []).filter(n => n.kind === "entity" && (n.sources || []).some(s => allowId[s]));
-        const srcs = (g.nodes || []).filter(n => n.kind === "source" && allowId[n.id.slice(2)] && n.date).slice().sort((a, b) => (a.date || "").localeCompare(b.date || ""));
-        const elements = [], pos = {}, gap = 68;
-        ents.forEach((n, i) => { elements.push({ data: { id: n.id, label: n.label, kind: "entity", count: n.count || 1, sel: !!n.is_selector, color: "#2a3a33" } }); pos[n.id] = { x: 0, y: i * gap }; });
-        srcs.forEach((n, i) => { elements.push({ data: { id: n.id, label: (n.date || "?") + "   " + n.label, kind: "source", category: n.category, source_id: n.id.slice(2), url: n.url, orientation: n.orientation, date: n.date, count: 6, color: "#1f2d28" } }); pos[n.id] = { x: 360, y: i * gap }; });
-        const idset = {}; elements.forEach(e => idset[e.data.id] = 1);
-        (g.edges || []).filter(e => e.kind === "mention" && idset[e.source] && idset[e.target]).forEach(e => elements.push({ data: { id: e.id, source: e.source, target: e.target, kind: "mention", weight: 1 } }));
-        return { elements, layout: { name: "preset", positions: (n) => pos[n.id()] || { x: 0, y: 0 }, animate: true, animationDuration: 650, animationEasing: "ease-in-out-cubic", fit: true, padding: 55 } };
-      }
-      let ents = (g.nodes || []).filter(n => n.kind === "entity").filter(n => (n.sources || []).some(s => allowId[s]));
-      if (S.graphSort === "location") ents = ents.filter(n => isLoc(n.category));
-      const byColor = (S.graphSort === "entity");
-      const elements = [], idset = {};
-      ents.forEach(n => { elements.push({ data: { id: n.id, label: n.label, kind: "entity", cat: n.category, count: n.count || 1, sel: !!n.is_selector, color: byColor ? graphCatColor(n.category) : "#2a3a33" } }); idset[n.id] = 1; });
-      (g.edges || []).filter(e => e.kind === "cooccur" && idset[e.source] && idset[e.target]).forEach(e => elements.push({ data: { id: e.id, source: e.source, target: e.target, kind: "cooccur", weight: e.weight || 1 } }));
-      return { elements, layout: { name: "concentric", concentric: n => n.data("count") || 1, levelWidth: () => 4, minNodeSpacing: 34, animate: true, animationDuration: 650, animationEasing: "ease-in-out-cubic" } };
+    function gMakeCard(node, isSub) {
+      const el = document.createElement("div");
+      el.dataset.id = node.id;
+      el.style.cssText = "position:absolute;transform:translate(-50%,-50%);cursor:pointer;z-index:" + (isSub ? 12 : 10);
+      el.innerHTML = gCardInner(node, isSub);
+      el.addEventListener("click", (ev) => { ev.stopPropagation(); gSelect(node.id); });
+      return el;
     }
-    function applyGraph(elements, layout) {
-      const want = {}; elements.forEach(e => want[e.data.id] = e);
-      CY.batch(() => {
-        CY.elements().forEach(el => { if (!want[el.id()]) el.remove(); });
-        elements.forEach(e => { if (CY.getElementById(e.data.id).empty()) CY.add(e); });
+    function gRebuildCards() {
+      const m = gModel(); GV.model = m;
+      const want = {}; want[m.subject.id] = 1; m.ents.forEach(e => want[e.id] = 1);
+      Object.keys(GV.cards).forEach(id => { if (!want[id]) { GV.cards[id].remove(); delete GV.cards[id]; } });
+      if (!GV.cards[m.subject.id]) { const cc = gMakeCard(m.subject, true); GV.canvas.appendChild(cc); GV.cards[m.subject.id] = cc; }
+      m.ents.forEach(e => { if (!GV.cards[e.id]) { const cc = gMakeCard(e, false); GV.canvas.appendChild(cc); GV.cards[e.id] = cc; } const mt = GV.cards[e.id].querySelector(".gmeta"); if (mt) mt.textContent = e.date || "—"; });
+    }
+    function gCenter(id) { const cc = GV.cards[id]; if (!cc) return null; const r = cc.getBoundingClientRect(), wr = GV.wrap.getBoundingClientRect(); return { x: r.left + r.width / 2 - wr.left, y: r.top + r.height / 2 - wr.top }; }
+    function gDrawLines() {
+      if (!GV) return; const m = GV.model, mode = S.graphSort; const sc = gCenter(m.subject.id);
+      const vis = (id) => GV.cards[id] && GV.cards[id].style.display !== "none";
+      let d = "";
+      (m.ents || []).forEach(e => { if (vis(e.id)) { const b = gCenter(e.id); if (sc && b) { if (mode === "date") { const mx = (sc.x + b.x) / 2; d += `M${sc.x} ${sc.y} H${mx} V${b.y} H${b.x} `; } else { d += `M${sc.x} ${sc.y} L${b.x} ${b.y} `; } } } });
+      let cooc = "";
+      if (mode !== "date") { (m.cooc || []).forEach(pair => { const a = pair[0], b = pair[1]; if (vis(a) && vis(b)) { const ca = gCenter(a), cb = gCenter(b); if (ca && cb) cooc += `M${ca.x} ${ca.y} L${cb.x} ${cb.y} `; } }); }
+      GV.svg.innerHTML = `<path d="${d}" fill="none" stroke="rgba(255,255,255,0.35)" stroke-width="1"/>` + (cooc ? `<path d="${cooc}" fill="none" stroke="rgba(255,255,255,0.14)" stroke-width="1"/>` : "");
+    }
+    function gAnimateLines(dur) {
+      const t0 = performance.now();
+      function step(t) { gDrawLines(); if (GV && t - t0 < dur) GV.raf = requestAnimationFrame(step); }
+      if (GV && GV.raf) cancelAnimationFrame(GV.raf);
+      GV.raf = requestAnimationFrame(step);
+    }
+    function gLayout(animate) {
+      if (!GV) return;
+      const W = GV.canvas.clientWidth, H = GV.canvas.clientHeight;
+      if (!W || !H) { requestAnimationFrame(() => gLayout(animate)); return; }
+      const m = GV.model, mode = S.graphSort;
+      const used = (mode === "location") ? m.ents.filter(e => isLoc(e.category)) : m.ents;
+      const pos = (mode === "date") ? gDatePos(used, W, H) : gRelationPos(used, W, H);
+      if (!(m.subject.id in pos)) pos[m.subject.id] = { x: W / 2, y: H / 2 };
+      const showMeta = (mode === "date");
+      Object.keys(GV.cards).forEach(id => {
+        const cc = GV.cards[id];
+        cc.style.display = (id === m.subject.id || (id in pos)) ? "block" : "none";
+        cc.style.transition = animate ? "left .62s cubic-bezier(.4,0,.2,1),top .62s cubic-bezier(.4,0,.2,1)" : "none";
+        const mt = cc.querySelector(".gmeta"); if (mt) mt.style.display = showMeta ? "inline" : "none";
       });
-      CY.layout(layout).run();
+      Object.keys(pos).forEach(id => { const cc = GV.cards[id]; if (cc) { cc.style.left = pos[id].x + "px"; cc.style.top = pos[id].y + "px"; } });
+      GV.pos = pos;
+      if (animate) gAnimateLines(720); else requestAnimationFrame(gDrawLines);
     }
+    function gSelect(id) {
+      if (!GV) return; const m = GV.model;
+      if (id === m.subject.id) { gCloseDrawer(); return; }
+      const node = (m.ents || []).find(e => e.id === id); if (!node) { gCloseDrawer(); return; }
+      const srcs = (node.sources || []).map(sid => m.srcById[sid]).filter(Boolean);
+      const body = srcs.length ? srcs.map(sx => `<div style="padding:8px 0;border-bottom:1px solid rgba(255,255,255,.08)"><div style="color:var(--fit-green);font-size:11px">${esc(gShort(sx.label || sx.url || ""))} <span style="color:var(--fit-text-faint)">· ${esc(sx.date || "")} · ${esc(sx.category || "")}</span></div>${sx.excerpt ? `<div style="color:var(--fit-text-muted);font-size:10px;line-height:1.5;margin-top:3px">${esc(sx.excerpt)}</div>` : ""}${sx.url ? `<a href="${esc(safeUrl(sx.url))}" target="_blank" rel="noopener" style="color:var(--fit-sage);font-size:10px;word-break:break-all;display:block;margin-top:3px">${esc(sx.url)}</a>` : ""}</div>`).join("") : `<div style="color:var(--fit-text-faint);font-size:11px">Aucune source.</div>`;
+      GV.drawer.innerHTML = `<div style="padding:10px 12px"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px"><span style="color:var(--fit-green);font-weight:700;font-size:12px">${esc(node.label)}</span><span onclick="indice.closeDrawer()" style="cursor:pointer;color:var(--fit-text-faint)">✕</span></div><div style="color:var(--fit-text-faint);font-size:9px;letter-spacing:.08em;margin-bottom:8px">${esc(node.category || "")} · ${node.count || 0} mentions · ${srcs.length} source(s)</div>${body}</div>`;
+      GV.drawer.style.display = "block";
+      const cc = GV.cards[id]; const wr = GV.wrap.getBoundingClientRect(), r = cc.getBoundingClientRect();
+      const dw = 300; let left = r.left - wr.left, top = r.bottom - wr.top + 6;
+      left = Math.max(8, Math.min(left, GV.wrap.clientWidth - dw - 8));
+      top = Math.max(8, Math.min(top, GV.wrap.clientHeight - 60));
+      GV.drawer.style.left = left + "px"; GV.drawer.style.top = top + "px"; GV.drawer.style.width = dw + "px";
+      GV.sel = id;
+    }
+    function gCloseDrawer() { if (GV && GV.drawer) { GV.drawer.style.display = "none"; GV.sel = null; } }
+    function gSetSort(k) {
+      S.graphSort = k; gCloseDrawer();
+      const hud = document.getElementById("ghud");
+      if (hud) hud.querySelectorAll("[data-sort]").forEach(el => { const on = el.getAttribute("data-sort") === k; el.style.background = on ? "var(--fit-green)" : "transparent"; el.style.color = on ? "var(--fit-ink-on-green)" : "var(--fit-text-dim)"; });
+      gLayout(true);
+    }
+    function gSetSrcFilter(c) {
+      S.srcFilter = c; gCloseDrawer();
+      const rail = document.getElementById("grail");
+      if (rail) rail.querySelectorAll("[data-src]").forEach(el => { const on = el.getAttribute("data-src") === c; el.style.borderColor = on ? "var(--fit-green)" : "var(--fit-border)"; el.style.color = on ? "var(--fit-green)" : "var(--fit-text-muted)"; });
+      gRebuildCards(); gLayout(true);
+    }
+    function gOnResize() { if (GV) gLayout(false); }
     function graphMount() {
-      const el = document.getElementById("cy"); const g = S.graphData;
-      if (!el || !g || typeof cytoscape === "undefined") return;
-      const ge = graphElements();
-      if (CY) {
-        try { CY.mount(el); applyGraph(ge.elements, ge.layout); return; } catch (e) { try { CY.destroy(); } catch (_e) { } CY = null; }
-      }
-      CY = cytoscape({ container: el, elements: ge.elements, wheelSensitivity: 0.2, minZoom: 0.2, maxZoom: 3, style: GSTYLE(), layout: ge.layout });
-      CY.on("tap", "node", evt => showProv(evt.target.data()));
-      CY.on("tap", "edge", evt => showProv(evt.target.data()));
-      CY.on("tap", evt => { if (evt.target === CY) setProvHtml(""); });
+      const wrap = document.getElementById("gwrap");
+      if (!wrap || !S.graphData || !S.dossierData) return;
+      if (GV && GV.wrap === wrap) { gLayout(false); return; }
+      GV = { wrap: wrap, canvas: document.getElementById("gcanvas"), svg: document.getElementById("glines"), drawer: document.getElementById("gdrawer"), dname: (S.dossierData.name || ""), cards: {}, sel: null, raf: 0 };
+      wrap.addEventListener("click", () => gCloseDrawer());
+      window.addEventListener("resize", gOnResize);
+      gRebuildCards();
+      gLayout(false);
     }
     function viewDossierDetail(d) {
       if (S.graphView) return viewGraph(d);
@@ -1067,11 +1119,11 @@
       createDossier: async () => { const n = (S.dossierNew || "").trim(); if (!n) return; try { await api("/api/dossiers", { method: "POST", json: { name: n } }); S.dossierNew = ""; await loadDossiers(); } catch (e) { } },
       openDossier: async (id) => { S.searchQ = ""; S.searchResults = []; S.searchChecked = new Set(); S.searchError = null; S.searchBusy = false; S.dossierAnalysis = null; S.exportError = null; S.juxFilter = "all"; S.dossierUploadMsg = ""; S.graphView = false; S.graphData = null; try { const d = await api("/api/dossier/" + id); S.dossierId = id; S.dossierData = d; render(); } catch (e) { } },
       openGraph: async () => { if (!S.dossierId) return; S.graphView = true; S.graphData = null; S.graphSort = "relation"; S.sortOpen = false; S.srcFilter = "all"; render(); try { const g = await api("/api/dossier/" + S.dossierId + "/graph"); S.graphData = g; } catch (e) { S.graphData = { nodes: [], edges: [], events: [], counts: {} }; } render(); },
-      closeGraph: () => { S.graphView = false; S.graphData = null; if (CY) { try { CY.destroy(); } catch (e) { } CY = null; } render(); },
-      toggleSort: () => { S.sortOpen = !S.sortOpen; render(); },
-      setSort: (k) => { S.graphSort = k; S.sortOpen = false; render(); },
-      setSrcFilter: (c) => { S.srcFilter = c; render(); },
-      closeDossier: () => { S.dossierId = null; S.dossierData = null; S.searchResults = []; S.searchChecked = new Set(); S.searchQ = ""; S.dossierAnalysis = null; S.exportError = null; S.juxFilter = "all"; S.dossierUploadMsg = ""; S.graphView = false; S.graphData = null; if (CY) { try { CY.destroy(); } catch (e) { } CY = null; } render(); loadDossiers(); },
+      closeGraph: () => { S.graphView = false; S.graphData = null; if (GV) { try { window.removeEventListener("resize", gOnResize); } catch (e) { } GV = null; } render(); },
+      setSort: (k) => gSetSort(k),
+      setSrcFilter: (c) => gSetSrcFilter(c),
+      closeDrawer: () => gCloseDrawer(),
+      closeDossier: () => { S.dossierId = null; S.dossierData = null; S.searchResults = []; S.searchChecked = new Set(); S.searchQ = ""; S.dossierAnalysis = null; S.exportError = null; S.juxFilter = "all"; S.dossierUploadMsg = ""; S.graphView = false; S.graphData = null; if (GV) { try { window.removeEventListener("resize", gOnResize); } catch (e) { } GV = null; } render(); loadDossiers(); },
       winMin: (k) => { const key = decodeURIComponent(k); if (S.winMin.has(key)) S.winMin.delete(key); else S.winMin.add(key); render(); },
       winMax: (k) => { const key = decodeURIComponent(k); S.winMax = (S.winMax === key ? null : key); render(); },
       winClose: (k) => { const key = decodeURIComponent(k); S.winClosed.add(key); render(); },
