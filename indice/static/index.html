@@ -386,17 +386,25 @@
       },
       privacy: {
         title: "Politique de confidentialité",
-        html: `<div ${_SH}>Vos données restent chez vous</div>
+        html: `<div ${_SH}>Rôles</div>
+<p>Indice est un logiciel auto-hébergé édité par The Day Info. La personne ou l'organisation qui installe et utilise Indice décide des données qu'elle y verse et de leur usage : elle en est responsable au sens du RGPD. The Day Info n'a accès à aucune de ces données.</p>
+<div ${_SH}>Vos données restent chez vous</div>
 <p>Indice est auto-hébergé. Les fichiers que vous déposez, les dossiers, les transcriptions et les rapports sont stockés <strong>localement</strong>, sur votre machine ou votre serveur. Ils ne sont envoyés à aucun service externe.</p>
 <div ${_SH}>Traitement local</div>
 <p>La transcription (Whisper), l'OCR et l'extraction d'entités s'exécutent sur votre machine. Aucune télémétrie, aucun traceur, aucun compte distant.</p>
 <div ${_SH}>Recherche web (optionnelle)</div>
-<p>La collecte web est désactivée par défaut. Si vous l'activez, la requête que vous saisissez est transmise au fournisseur de recherche que vous configurez (Exa ou Tavily), et Indice télécharge les pages publiques que vous sélectionnez. Ces fournisseurs traitent alors votre requête selon leurs propres politiques.</p>
+<p>La collecte web est désactivée par défaut. Si vous l'activez, la requête que vous saisissez est transmise au fournisseur de recherche que vous configurez (Exa ou Tavily), et Indice télécharge les pages publiques que vous sélectionnez. Ces fournisseurs traitent alors votre requête selon leurs propres politiques. Exa et Tavily sont établis aux États-Unis : activer la recherche web implique un transfert de votre requête hors de l'Union européenne.</p>
+<div ${_SH}>Modèles téléchargés</div>
+<p>Au premier usage, les modèles de transcription (Whisper) sont téléchargés depuis leur dépôt public (Hugging Face). Seule votre adresse IP est alors visible de ce service ; aucun contenu ne lui est envoyé.</p>
 <div ${_SH}>Authentification</div>
-<p>La phrase secrète n'est jamais stockée en clair (hachage salé PBKDF2) ; les jetons de session vivent en mémoire et expirent.</p>
+<p>La phrase secrète n'est jamais stockée en clair (hachage salé PBKDF2). Le jeton de session est conservé dans le stockage local de votre navigateur ; côté serveur, il n'existe qu'en mémoire et expire (une heure par défaut). Aucun cookie publicitaire ou de mesure d'audience n'est utilisé.</p>
+<div ${_SH}>Conservation et effacement</div>
+<p>Indice ne supprime rien automatiquement : dossiers, sources et sessions restent sur votre machine tant que vous les gardez. Vous pouvez supprimer à tout moment une source, un dossier entier ou une session archivée depuis l'interface ; la suppression efface les fichiers correspondants. Fixez une durée de conservation adaptée à votre usage, en particulier pour les données concernant des tiers.</p>
+<div ${_SH}>Vos droits</div>
+<p>Les personnes dont les données figurent dans une instance (accès, rectification, effacement, opposition, portabilité) s'adressent à la personne ou l'organisation qui l'exploite. L'export MD/PDF et la suppression intégrés permettent d'y répondre.</p>
 <div ${_SH}>Responsabilité</div>
-<p>En tant qu'hébergeur de votre instance, vous êtes responsable des données que vous versez et de leur conformité, notamment la vie privée des tiers et la loi applicable.</p>
-<p ${_FT}>Dernière mise à jour : 12 novembre 2026 · Contact : The Day Info.</p>`
+<p>En tant qu'hébergeur de votre instance, vous êtes responsable des données que vous versez et de leur conformité, notamment la vie privée des tiers et la loi applicable. Certaines données sont sensibles (santé, infractions pénales, enregistrements de personnes) : elles exigent une base légale et des mesures de sécurité adaptées.</p>
+<p ${_FT}>Dernière mise à jour : 18 novembre 2026 · Contact : The Day Info · github.com/armelyara/Indice (Issues).</p>`
       },
       terms: {
         title: "Conditions d'utilisation",
@@ -406,11 +414,17 @@
 <p>Le logiciel est fourni sans garantie d'aucune sorte, dans les limites permises par la loi, conformément à la licence Apache-2.0.</p>
 <div ${_SH}>Usage licite</div>
 <p>Vous êtes seul responsable de l'usage que vous faites de Indice. Il est destiné à des investigations et à un travail de recherche et d'investigation légitimes. Ne l'utilisez pas pour surveiller illégalement, harceler ou porter atteinte aux droits d'autrui.</p>
+<div ${_SH}>Âge minimum</div>
+<p>Indice est réservé aux personnes âgées d'au moins 15 ans ; avant 18 ans, avec l'accord d'un parent ou d'un responsable légal.</p>
+<div ${_SH}>Enregistrements et personnes concernées</div>
+<p>Avant d'enregistrer ou de transcrire la voix d'une personne (interview, témoignage), informez-la et obtenez son accord lorsque la loi l'exige. N'enregistrez jamais une conversation privée à l'insu de ses participants.</p>
+<div ${_SH}>Données sensibles</div>
+<p>Les données de santé, les données relatives à des infractions ou condamnations pénales et les données d'identification de tiers sont soumises à des règles strictes : disposez d'une base légale et protégez votre instance (phrase secrète forte, accès limité).</p>
 <div ${_SH}>Ce n'est pas un verdict</div>
 <p>Indice rassemble, extrait et aligne des éléments tracés à leur source ; il n'établit pas la vérité et ne rend aucun jugement. Les conclusions vous appartiennent et doivent être vérifiées. Indice ne fournit pas de conseil juridique.</p>
 <div ${_SH}>Données</div>
 <p>Le traitement des données est décrit dans la Politique de confidentialité.</p>
-<p ${_FT}>Dernière mise à jour : 16 novembre 2026.</p>`
+<p ${_FT}>Dernière mise à jour : 18 novembre 2026.</p>`
       }
     };
     function docScreen(key) {
@@ -927,9 +941,9 @@
     function viewDossierDetail(d) {
       if (S.graphView) return viewGraph(d);
       const srcs = (d.sources || []);
-      const list = srcs.length ? srcs.map(x => `<div style="display:grid;grid-template-columns:90px 1fr 100px 150px;padding:11px 16px;border-bottom:1px solid var(--fit-grid-line);font-size:12px;align-items:center"><span style="color:var(--fit-sage)">${esc(x.type || "src")}</span><span style="color:var(--fit-green)">${esc(x.title || x.url || x.id)}</span><span style="color:var(--fit-text-muted)">${esc(x.published_date || "")}</span><select onchange="indice.setOrientation('${x.id}', this.value)" style="background:var(--fit-surface-3);border:1px solid var(--fit-border);color:var(--fit-text-muted);font-size:10px;padding:3px 4px;max-width:150px">${["unknown", "media", "pro-gov", "pro-opp", "intl-ngo", "source"].map(o => `<option value="${o}" ${((x.orientation || "unknown") === o) ? "selected" : ""}>${esc(orientInfo(o).l)}</option>`).join("")}</select></div>`).join("")
+      const list = srcs.length ? srcs.map(x => `<div style="display:grid;grid-template-columns:90px 1fr 100px 150px 28px;padding:11px 16px;border-bottom:1px solid var(--fit-grid-line);font-size:12px;align-items:center"><span style="color:var(--fit-sage)">${esc(x.type || "src")}</span><span style="color:var(--fit-green)">${esc(x.title || x.url || x.id)}</span><span style="color:var(--fit-text-muted)">${esc(x.published_date || "")}</span><select onchange="indice.setOrientation('${x.id}', this.value)" style="background:var(--fit-surface-3);border:1px solid var(--fit-border);color:var(--fit-text-muted);font-size:10px;padding:3px 4px;max-width:150px">${["unknown", "media", "pro-gov", "pro-opp", "intl-ngo", "source"].map(o => `<option value="${o}" ${((x.orientation || "unknown") === o) ? "selected" : ""}>${esc(orientInfo(o).l)}</option>`).join("")}</select><button onclick="indice.deleteSource('${x.id}')" title="Supprimer cette source" style="background:transparent;border:none;color:var(--fit-text-faint);font-size:14px;cursor:pointer">×</button></div>`).join("")
         : `<div style="padding:16px;color:var(--fit-text-faint);font-size:12px">Aucune source versée. Lance une recherche, coche les sources pertinentes, puis « Télécharger ».</div>`;
-      return `<div style="padding:26px 34px"><div style="display:flex;align-items:center;gap:14px;margin-bottom:18px"><button class="actbtn" onclick="indice.closeDossier()">← DOSSIERS</button><div style="font-size:22px;letter-spacing:.1em">DOSSIER · ${esc(d.name)}</div><span style="color:var(--fit-text-faint);font-size:11px">${esc(d.id)}</span></div>
+      return `<div style="padding:26px 34px"><div style="display:flex;align-items:center;gap:14px;margin-bottom:18px"><button class="actbtn" onclick="indice.closeDossier()">← DOSSIERS</button><div style="font-size:22px;letter-spacing:.1em">DOSSIER · ${esc(d.name)}</div><span style="color:var(--fit-text-faint);font-size:11px">${esc(d.id)}</span><button class="actbtn" onclick="indice.deleteDossier()" title="Supprimer ce dossier et ses sources" style="margin-left:auto;color:var(--fit-text-faint)">SUPPRIMER LE DOSSIER</button></div>
     <div class="win" style="max-width:900px;margin-bottom:18px"><div class="hd"><span>AJOUTER DES FICHIERS AU DOSSIER</span><span class="wc"></span></div><div class="rule"></div><div style="padding:14px 16px"><input type="file" multiple accept=".pdf,.docx,.txt,.md,.csv,audio/*,image/*" onchange="indice.uploadToDossier(this.files)" style="color:var(--fit-text-muted);font-size:12px"/><div style="font-size:11px;color:var(--fit-text-faint);margin-top:8px">PDF · DOCX · TXT · images (OCR) · audio — extrait/transcrit et versé dans le dossier, hors-ligne.</div><div style="margin-top:8px;font-size:12px;color:var(--fit-sage)">${esc(S.dossierUploadMsg || "")}</div></div></div>
     ${searchWin(d)}
     ${win("Sources du dossier (" + srcs.length + ")", list)}
@@ -938,10 +952,10 @@
     }
     function viewArchive() {
       const rows = S.archive.filter(a => !S.query || ((a.subject || "") + (a.id || "")).toLowerCase().includes(S.query.toLowerCase()))
-        .map(a => `<div style="display:grid;grid-template-columns:110px 1fr 120px 110px 90px;padding:12px 18px;border-bottom:1px solid var(--fit-grid-line);font-size:12px;align-items:center"><span style="color:var(--fit-sage)">${esc(a.id)}</span><span style="color:var(--fit-green);font-weight:700">${esc(a.subject)}</span><span style="color:var(--fit-text-muted)">${esc(a.channel || "")}</span><span style="color:var(--fit-text-muted)">${esc(a.date || "")}</span><span style="color:${a.statusColor || "var(--fit-text-muted)"};font-size:10px">● ${esc(a.status || "")}</span></div>`).join("")
+        .map(a => `<div style="display:grid;grid-template-columns:110px 1fr 120px 110px 90px 28px;padding:12px 18px;border-bottom:1px solid var(--fit-grid-line);font-size:12px;align-items:center"><span style="color:var(--fit-sage)">${esc(a.id)}</span><span style="color:var(--fit-green);font-weight:700">${esc(a.subject)}</span><span style="color:var(--fit-text-muted)">${esc(a.channel || "")}</span><span style="color:var(--fit-text-muted)">${esc(a.date || "")}</span><span style="color:${a.statusColor || "var(--fit-text-muted)"};font-size:10px">● ${esc(a.status || "")}</span><button onclick="indice.deleteSession('${a.id}')" title="Supprimer cette session" style="background:transparent;border:none;color:var(--fit-text-faint);font-size:14px;cursor:pointer">×</button></div>`).join("")
         || `<div style="padding:16px;color:var(--fit-text-faint);font-size:12px">Aucun dossier archivé.</div>`;
       return `<div style="padding:26px 34px;max-width:1000px;margin:0 auto"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:18px;gap:12px;flex-wrap:wrap"><div style="font-size:22px;letter-spacing:.1em">ARCHIVE DES DOSSIERS</div><input value="${esc(S.query)}" oninput="indice.setQuery(this.value)" placeholder="RECHERCHER…" style="background:var(--fit-surface-3);border:1px solid var(--fit-border);color:var(--fit-green);font-size:12px;padding:8px 12px;outline:none;width:200px"/></div>
-    <div class="win"><div style="display:grid;grid-template-columns:110px 1fr 120px 110px 90px;padding:11px 18px;font-size:10px;letter-spacing:.14em;color:var(--fit-text-faint);border-bottom:1px solid var(--fit-border);background:var(--fit-titlebar)"><span>ID</span><span>SUJET</span><span>CANAL</span><span>DATE</span><span>STATUT</span></div>${rows}</div></div>`;
+    <div class="win"><div style="display:grid;grid-template-columns:110px 1fr 120px 110px 90px 28px;padding:11px 18px;font-size:10px;letter-spacing:.14em;color:var(--fit-text-faint);border-bottom:1px solid var(--fit-border);background:var(--fit-titlebar)"><span>ID</span><span>SUJET</span><span>CANAL</span><span>DATE</span><span>STATUT</span></div>${rows}</div></div>`;
     }
     function viewAnalyze() {
       return `<div style="padding:22px 28px;max-width:720px;margin:0 auto"><div style="font-size:11px;letter-spacing:.2em;color:var(--fit-sage);margin-bottom:16px">INGESTION — ENREGISTREMENT / NOTE VOCALE</div>
@@ -958,7 +972,7 @@
     <button onclick="indice.toggleSetting('${k}')" style="width:40px;height:20px;border:1px solid ${on ? "var(--fit-green)" : "#2c3233"};background:${on ? "rgba(56,239,125,.15)" : "#0b0d0d"};position:relative;padding:0"><span style="position:absolute;top:1px;left:${on ? "21px" : "1px"};width:16px;height:16px;background:${on ? "var(--fit-green)" : "#4e5856"};transition:left .15s"></span></button></div>`;
       };
       return `<div style="padding:26px 34px;max-width:680px"><div style="font-size:22px;letter-spacing:.1em;margin-bottom:20px">CONFIGURATION DU MOTEUR</div>
-    ${win("Moteur", tog("vad", "Silero VAD", "Gating voix (mode micro)") + tog("diarize", "Diarisation", "Séparer les locuteurs") + tog("autolock", "Verrou automatique", "Verrouiller à la corrélation") + tog("redact", "Masquer PII", "Caviarder les identifiants"))}</div>`;
+    ${win("Moteur", tog("vad", "Silero VAD", "Gating voix (mode micro)") + tog("autolock", "Verrou automatique", "Verrouiller à la corrélation"))}</div>`;
     }
 
     /* terminal */
@@ -1153,6 +1167,9 @@
       setDossierNew: (v) => { S.dossierNew = v; },
       createDossier: async () => { const n = (S.dossierNew || "").trim(); if (!n) return; try { await api("/api/dossiers", { method: "POST", json: { name: n } }); S.dossierNew = ""; await loadDossiers(); } catch (e) { } },
       openDossier: async (id) => { S.searchQ = ""; S.searchResults = []; S.searchChecked = new Set(); S.searchError = null; S.searchBusy = false; S.dossierAnalysis = null; S.exportError = null; S.juxFilter = "all"; S.dossierUploadMsg = ""; S.graphView = false; S.graphData = null; try { const d = await api("/api/dossier/" + id); S.dossierId = id; S.dossierData = d; render(); } catch (e) { } },
+      deleteSource: async (sid) => { if (!S.dossierId || !confirm("Supprimer définitivement cette source ?")) return; try { const r = await api("/api/dossier/" + S.dossierId + "/source/" + sid, { method: "DELETE" }); if (r && r.id) S.dossierData = r; S.dossierAnalysis = null; render(); } catch (e) { } },
+      deleteDossier: async () => { if (!S.dossierId || !confirm("Supprimer définitivement ce dossier et toutes ses sources ?")) return; try { await api("/api/dossier/" + S.dossierId, { method: "DELETE" }); indice.closeDossier(); } catch (e) { } },
+      deleteSession: async (id) => { if (!confirm("Supprimer définitivement cette session archivée ?")) return; try { await api("/api/sessions/" + id, { method: "DELETE" }); await loadArchive(); render(); } catch (e) { } },
       openGraph: async () => { if (!S.dossierId) return; S.graphView = true; S.graphData = null; S.graphSort = "relation"; S.sortOpen = false; S.srcFilter = "all"; render(); try { const g = await api("/api/dossier/" + S.dossierId + "/graph"); S.graphData = g; } catch (e) { S.graphData = { nodes: [], edges: [], events: [], counts: {} }; } render(); },
       closeGraph: () => { S.graphView = false; S.graphData = null; if (GV) { try { window.removeEventListener("resize", gOnResize); } catch (e) { } GV = null; } render(); },
       setSort: (k) => gSetSort(k),

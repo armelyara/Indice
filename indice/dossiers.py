@@ -13,9 +13,11 @@ Layout:
 
 from __future__ import annotations
 
+import glob
 import json
 import os
 import re
+import shutil
 import threading
 import time
 import uuid
@@ -146,4 +148,34 @@ def set_source_orientation(dossier_id: str, source_id: str, orientation: str):
         if not found:
             return None
         _write_meta(meta)
+        return meta
+
+
+def delete_dossier(dossier_id: str) -> bool:
+    """Erase a whole dossier: metadata and every stored source file."""
+    with _LOCK:
+        try:
+            d = _dossier_dir(dossier_id)
+        except ValueError:
+            return False
+        if not os.path.isdir(d):
+            return False
+        shutil.rmtree(d)
+        return True
+
+
+def delete_source(dossier_id: str, source_id: str) -> Optional[Dict[str, Any]]:
+    """Erase one source: remove it from the metadata and delete its stored file(s)."""
+    with _LOCK:
+        meta = _read_meta(dossier_id)
+        if meta is None:
+            return None
+        sid = _safe_id(source_id)
+        kept = [s for s in meta.get("sources", []) if s.get("id") != sid]
+        if len(kept) == len(meta.get("sources", [])):
+            return None
+        meta["sources"] = kept
+        _write_meta(meta)
+        for path in glob.glob(os.path.join(_dossier_dir(dossier_id), "sources", sid + ".*")):
+            os.remove(path)
         return meta

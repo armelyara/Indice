@@ -17,9 +17,15 @@ import sys
 def _cmd_serve(args):
     import uvicorn
     if args.host not in ("127.0.0.1", "localhost", ""):
-        print("WARNING: host %s exposes Indice beyond this machine. Set "
-              "INDICE_PASSPHRASE and put it behind a reverse proxy / TLS." % args.host,
-              file=sys.stderr)
+        # Exposed beyond this machine: never run on a missing or shipped default passphrase.
+        passphrase = os.environ.get("INDICE_PASSPHRASE", "")
+        if not passphrase or passphrase == "indice":
+            print("ERROR: host %s exposes Indice beyond this machine. Set a strong "
+                  "INDICE_PASSPHRASE (not the default) before serving on the network." % args.host,
+                  file=sys.stderr)
+            sys.exit(2)
+        print("WARNING: host %s exposes Indice beyond this machine. Put it behind a "
+              "reverse proxy / TLS." % args.host, file=sys.stderr)
     if args.open:
         import threading
         import webbrowser

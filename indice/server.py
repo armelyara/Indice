@@ -172,6 +172,14 @@ async def session_detail(session_id: str, _: str = Depends(require_auth)):
     return s
 
 
+@app.delete("/api/sessions/{session_id}")
+async def session_delete(session_id: str, _: str = Depends(require_auth)):
+    """Erase an archived session (right to erasure)."""
+    if not db.delete_session(session_id):
+        raise HTTPException(status_code=404, detail="Session not found")
+    return {"deleted": session_id}
+
+
 @app.get("/api/targets/{code}")
 async def target(code: str, _: str = Depends(require_auth)):
     t = db.get_target(code.upper())
@@ -208,6 +216,14 @@ async def dossier_detail(dossier_id: str, _: str = Depends(require_auth)):
     if not d:
         raise HTTPException(status_code=404, detail="Dossier not found")
     return d
+
+
+@app.delete("/api/dossier/{dossier_id}")
+async def dossier_delete(dossier_id: str, _: str = Depends(require_auth)):
+    """Erase a dossier and all its stored sources (right to erasure)."""
+    if not dossiers.delete_dossier(dossier_id):
+        raise HTTPException(status_code=404, detail="Dossier not found")
+    return {"deleted": dossier_id}
 
 
 @app.get("/api/search")
@@ -269,6 +285,18 @@ async def set_source_orientation_ep(dossier_id: str, source_id: str, body: Orien
     """Tag a source's orientation (media / pro-gov / pro-opp / intl-ngo / source)."""
     o = body.orientation if body.orientation in ORIENTATIONS else "unknown"
     meta = dossiers.set_source_orientation(dossier_id, source_id, o)
+    if meta is None:
+        raise HTTPException(status_code=404, detail="Source not found")
+    return meta
+
+
+@app.delete("/api/dossier/{dossier_id}/source/{source_id}")
+async def source_delete(dossier_id: str, source_id: str, _: str = Depends(require_auth)):
+    """Erase one source of a dossier and its stored text."""
+    try:
+        meta = dossiers.delete_source(dossier_id, source_id)
+    except ValueError:
+        meta = None
     if meta is None:
         raise HTTPException(status_code=404, detail="Source not found")
     return meta

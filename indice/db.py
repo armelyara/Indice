@@ -104,3 +104,10 @@ def save_settings(settings: Dict[str, Any]) -> Dict[str, Any]:
     with _LOCK, _connect() as conn:
         conn.execute("INSERT OR REPLACE INTO settings VALUES (1, ?)", (json.dumps(settings),))
     return settings
+
+
+def delete_session(session_id: str) -> bool:
+    """Erase one archived listening session and its stored report."""
+    with _LOCK, _connect() as conn:
+        cur = conn.execute("DELETE FROM sessions WHERE id = ?", (session_id,))
+    return cur.rowcount > 0
